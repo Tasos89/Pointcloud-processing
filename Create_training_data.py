@@ -24,13 +24,13 @@ import pandas as pd
 from laspy.file import File
 
 #plant shape path
-#input_plant_path = 
+input_plant_path = r"D:\New folder\Nieuwe map\merged_shapes.shp"
 #pointcloud folder
-folder = r'G:\Gedeelde drives\400 Development\Student Assignments\Interns\Tasos\Sample_data\Broccoli\35m'
+folder = r'G:\Shared drives\400 Development\Student Assignments\Interns\Tasos\Sample_data\Broccoli\wgs84'
 
-output_folder = r'C:\Users\ericv\Pictures\please_sent_to_Tasos'
+output_folder = r'G:\Shared drives\400 Development\Student Assignments\Interns\Tasos\Sample_data\Broccoli'
 #read files
-#plant_shapes = gpd.read_file(input_plant_path)
+plant_shapes = gpd.read_file(input_plant_path)
 
 
 las_files = []
@@ -41,7 +41,7 @@ for root, dirs, files in os.walk(folder, topdown=True):
             las_files.append(os.path.join(root,name).replace("\\","/"))
 
 las_list = []
-for file in las_files[:]:
+for file in las_files[:5]:
     data_las = File(file, mode='r') #39 has big differences
     xyz = np.vstack([data_las.x, data_las.y, data_las.z]).transpose()
     las_list.append(xyz)
@@ -56,18 +56,29 @@ df = pd.DataFrame(xyz, columns=['X','Y', 'Z'])
 gdf = gpd.GeoDataFrame(
     df, geometry=gpd.points_from_xy(df.X, df.Y))
 
-gdf.crs = {'init' :'epsg:28992'}
+#gdf.crs = {'init' :'epsg:28992'}
+gdf.crs = ({'init' :'epsg:4326'})
+#gdf = gdf.to_crs({'init' :'epsg:28992'})
 
 gdf['plant_id'] = 0
 
-for i, plant in enumerate(plant_shapes):
-    contained = gpd.contains(plant, gdf)
-    gdf.plant_id.loc[contained[contained == True].index] = i+1    
+#for i, plant in enumerate(plant_shapes):
+contained = plant_shapes.geometry.contains(gdf.geometry)
+contained2 = gdf.geometry.contains(plant_shapes.geometry)
+#gdf.plant_id.loc[contained[contained == True].index] = i+1    
+test = gpd.sjoin(gdf, plant_shapes.iloc[:50], how = 'inner', op = 'intersects')
+test = gpd.sjoin(plant_shapes.iloc[50:100], gdf, how = 'inner', op = 'intersects')
+
+
+gdf.to_file(r'd:\points.shp')
+plant_shapes.to_file(r'd:\shapes.shp')
 
 #convert gdf to array
+broccoli_points = gdf[].to_numpy() #individual broccoli points labeled ~= 0
+
 
 #save array
-np.save()
+np.save('broccoli_points', broccoli_points)
 
 #gdf.iloc[:].to_file(output_folder + r'\points_broccoli.gpkg')
 
