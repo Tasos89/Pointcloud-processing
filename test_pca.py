@@ -2,7 +2,6 @@
 #PCA model
 #%% 
 #import packages 
-
 import os
 import pptk
 import numpy as np
