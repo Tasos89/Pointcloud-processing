@@ -13,6 +13,7 @@ from skimage.color import rgb2lab
 import cv2
 from PIL import Image
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import Normalizer
 
 #%%
 
@@ -37,8 +38,11 @@ y = xyz[:,1]
 z = xyz[:,2]
 
 #remove the median and divide by std = standarlize the data
-#We standarlize the data because...https://stats.stackexchange.com/questions/287425/why-do-you-need-to-scale-data-in-knn
-median = np.median(a=xyz,axis=0)
+#We normalize the data because...https://stats.stackexchange.com/questions/287425/why-do-you-need-to-scale-data-in-knn
+transformer = Normalizer().fit(xyz)
+xyz_n = transformer.transform(xyz)
+
+median = np.median(a=xyz,axis=0) #standarlization
 std = np.std(a=xyz,axis=0)
 x_std = (x - median[0])/std[0]
 y_std = (y - median[1])/std[1]
@@ -59,74 +63,53 @@ b_n = (B - B.min()) / (B.max() - B.min())
 rgb_n = np.vstack([r_n,g_n,b_n]).T
 
 # from BGR to Lab # https://gist.github.com/bikz05/6fd21c812ef6ebac66e1
-def func(t):
-    if (t > 0.008856):
-        return np.power(t, 1/3.0);
-    else:
-        return 7.787 * t + 16 / 116.0;
-
-#Conversion Matrix
-matrix = [[0.412453, 0.357580, 0.180423],
-          [0.212671, 0.715160, 0.072169],
-          [0.019334, 0.119193, 0.950227]]
-
-# RGB values lie between 0 to 1.0
-Lab_OpenCv = []
-Lab = np.zeros((len(rgb),3))
-for row in rgb:
-    cie = np.dot(matrix, row);
-    
-    cie[0] = cie[0] /0.950456;
-    cie[2] = cie[2] /1.088754; 
-    
-    # Calculate the L
-    L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
-    
-    # Calculate the a 
-    a = 500*(func(cie[0]) - func(cie[1]));
-    
-    # Calculate the b
-    b = 200*(func(cie[1]) - func(cie[2]));
-    
-    #  Values lie between -128 < b <= 127, -128 < a <= 127, 0 <= L <= 100 
-    Lab = [b , a, L]; 
-    
-    # OpenCV Format
-    L = L * 255 / 100;
-    a = a + 128;
-    b = b + 128;
-    Lab_OpenCv.append([b,a,L])
-Lab_OpenCv = np.asarray(Lab_OpenCv)
-scaler = MinMaxScaler()
-Lab = scaler.fit_transform(Lab_OpenCv)
-Lab[:,2] = 0.0
-b = Lab[:,0]
-a = Lab[:,1]
-L = Lab[:,2]
 # =============================================================================
-# BGR = np.zeros((len(rgb),1,3))
-# B = np.reshape(B,(len(B),1))
-# G = np.reshape(G,(len(G),1))
-# R = np.reshape(R,(len(R),1))
+# def func(t):
+#     if (t > 0.008856):
+#         return np.power(t, 1/3.0);
+#     else:
+#         return 7.787 * t + 16 / 116.0;
 # 
-# BGR[:,:,0] = B
-# BGR[:,:,1] = G
-# BGR[:,:,2] = R
+# #Conversion Matrix
+# matrix = [[0.412453, 0.357580, 0.180423],
+#           [0.212671, 0.715160, 0.072169],
+#           [0.019334, 0.119193, 0.950227]]
 # 
-# conv= cv2.cvtColor(BGR, cv2.COLOR_BGR2LAB)
-# 
-#     
-# d = 0
+# # RGB values lie between 0 to 1.0
+# Lab_OpenCv = []
+# Lab = np.zeros((len(rgb),3))
 # for row in rgb:
-#     i = row*255
-#     ii = (int(i[0]),int(i[1]),int(i[2]))  
-#     img = Image.new('RGB',(1,1),color = ii)
-#     img.save(r'C:\Users\laptop\Desktop\pixels\%d.png'%d)
-#     d+=1
+#     cie = np.dot(matrix, row);
+#     
+#     cie[0] = cie[0] /0.950456;
+#     cie[2] = cie[2] /1.088754; 
+#     
+#     # Calculate the L
+#     L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
+#     
+#     # Calculate the a 
+#     a = 500*(func(cie[0]) - func(cie[1]));
+#     
+#     # Calculate the b
+#     b = 200*(func(cie[1]) - func(cie[2]));
+#     
+#     #  Values lie between -128 < b <= 127, -128 < a <= 127, 0 <= L <= 100 
+#     Lab = [b , a, L]; 
+#     
+#     # OpenCV Format
+#     L = L * 255 / 100;
+#     a = a + 128;
+#     b = b + 128;
+#     Lab_OpenCv.append([b,a,L])
+# Lab_OpenCv = np.asarray(Lab_OpenCv)
+# scaler = MinMaxScaler()
+# Lab = scaler.fit_transform(Lab_OpenCv)
+# Lab[:,2] = 0.0
+# b = Lab[:,0]
+# a = Lab[:,1]
+# L = Lab[:,2]
 # =============================================================================
 
-    
-#######xyz_new = np.concatenate((xyz_new,rgb),axis = 1) #if we want to put the RGB as well
 #%%
 #10m resolution of broccoli crops
 # =============================================================================
@@ -211,6 +194,8 @@ omnivariance = []
 for i in range(len(indices)):
     ind = indices[i]
     coords = xyz_std[(ind),:]
+    #coords = xyz[(ind),:]
+
     x = coords[:,0]
     y = coords[:,1]
     z = coords[:,2]

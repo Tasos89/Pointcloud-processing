@@ -18,7 +18,7 @@ Broccoli = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_da
            
 data_las = File(Broccoli, mode='r') 
 
-xyz_B = np.vstack([data_las.X, data_las.Y, data_las.Z]).transpose()
+xyz_B = np.vstack([data_las.x, data_las.y, data_las.z]).transpose()
 rgb_B = ((np.c_[data_las.Red, data_las.Green, data_las.Blue]) / 255.) / 255. #normalized
 R = rgb_B[:,0]
 G = rgb_B[:,1]
@@ -30,15 +30,28 @@ g_std_B = (G - median_rgb[1])/std_rgb[1]
 b_std_B = (B - median_rgb[2])/std_rgb[2]
 rgb_std_B = np.vstack([r_std_B,g_std_B,b_std_B]).T
 
-#normalize the rgb
+#normalize the rgb 
 r_n_B = (R - R.min()) / (R.max() - R.min())
 g_n_B = (G - G.min()) / (G.max() - G.min())
 b_n_B = (B - B.min()) / (B.max() - B.min())
 
+#normalize the xyz
+transformer = Normalizer().fit(xyz_B)
+xyz_BB = transformer.transform(xyz_B)
+
+#standarlize the xyz
+median_xyz = np.median(a=xyz_B,axis=0)
+std_xyz = np.std(a=xyz_B,axis=0)
+x_std_B = (xyz_B[:,0] - median_xyz[0])/std_xyz[0]
+y_std_B = (xyz_B[:,1] - median_xyz[1])/std_xyz[1]
+z_std_B = (xyz_B[:,2] - median_xyz[2])/std_xyz[2]
+xyz_std_B = np.vstack([x_std_B,y_std_B,z_std_B]).T
+
+
 
 from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
-nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_B) #['auto', 'ball_tree', 'kd_tree', 'brute']
-distances, indices_B = nbrs.kneighbors(xyz_B) #the indices of the nearest neighbors 
+nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_std_B) #['auto', 'ball_tree', 'kd_tree', 'brute']
+distances, indices_B = nbrs.kneighbors(xyz_std_B) #the indices of the nearest neighbors 
 
 linearity = []
 planarity = []
@@ -90,15 +103,6 @@ ch = np.asarray(change_curvature)
 m_e = np.asarray(mean_elev)
 d_e = np.asarray(dif_elev)
 
-#standardization is used for PCA. preprocessing.StandardScaler does not work for me, hence manually..
-omn_std_B = (omnivariance-omnivariance.mean())/omnivariance.std()
-lin_std_B = (l-l.mean())/l.std()
-plan_std_B = (p-p.mean())/p.std()
-scat_std_B = (s-s.mean())/s.std()
-an_std_B = (an-an.mean())/an.std()
-ch_cur_std_B = (ch-ch.mean())/ch.std()
-mean_el_std_B = (m_e-m_e.mean())/m_e.std()
-dif_elev_std_B = (d_e-d_e.mean())/d_e.std()
 
 #normalization of the data 
 omn_n_B = (omnivariance -omnivariance.min()) / (omnivariance.max() - omnivariance.min())
@@ -111,50 +115,55 @@ mean_el_n_B = (m_e -m_e.min()) / (m_e.max() - m_e.min())
 dif_elev_n_B = (d_e -d_e.min()) / (d_e.max() - d_e.min())
 
 # from BGR to Lab # https://gist.github.com/bikz05/6fd21c812ef6ebac66e1
-def func(t):
-    if (t > 0.008856):
-        return np.power(t, 1/3.0);
-    else:
-        return 7.787 * t + 16 / 116.0;
-matrix = [[0.412453, 0.357580, 0.180423],
-          [0.212671, 0.715160, 0.072169],
-          [0.019334, 0.119193, 0.950227]]
-Lab_OpenCv = []
-Lab_B = np.zeros((len(rgb_B),3))
-for row in rgb_B:
-    cie = np.dot(matrix, row);
-    cie[0] = cie[0] /0.950456;
-    cie[2] = cie[2] /1.088754; 
-    L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
-    a = 500*(func(cie[0]) - func(cie[1]));
-    b = 200*(func(cie[1]) - func(cie[2]));
-    Lab_B = [b , a, L]; 
-    L = L * 255 / 100;
-    a = a + 128;
-    b = b + 128;
-    Lab_OpenCv.append([b,a,L])
-Lab_OpenCv = np.asarray(Lab_OpenCv)
-scaler = MinMaxScaler()
-Lab_B = scaler.fit_transform(Lab_OpenCv)
-Lab_B[:,2] = 0.0
-b_B = Lab_B[:,0]
-a_B = Lab_B[:,1]
-L_B = Lab_B[:,2]
-
-features_B = np.vstack((omn_n_B, dif_elev_n_B, L_B, a_B, b_B, Broccoli_LABEL)).T # Lab !!!!!!!!!!
+# =============================================================================
+# def func(t):
+#     if (t > 0.008856):
+#         return np.power(t, 1/3.0);
+#     else:
+#         return 7.787 * t + 16 / 116.0;
+# matrix = [[0.412453, 0.357580, 0.180423],
+#           [0.212671, 0.715160, 0.072169],
+#           [0.019334, 0.119193, 0.950227]]
+# Lab_OpenCv = []
+# Lab_B = np.zeros((len(rgb_B),3))
+# for row in rgb_B:
+#     cie = np.dot(matrix, row);
+#     cie[0] = cie[0] /0.950456;
+#     cie[2] = cie[2] /1.088754; 
+#     L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
+#     a = 500*(func(cie[0]) - func(cie[1]));
+#     b = 200*(func(cie[1]) - func(cie[2]));
+#     Lab_B = [b , a, L]; 
+#     L = L * 255 / 100;
+#     a = a + 128;
+#     b = b + 128;
+#     Lab_OpenCv.append([b,a,L])
+# Lab_OpenCv = np.asarray(Lab_OpenCv)
+# scaler = MinMaxScaler()
+# Lab_B = scaler.fit_transform(Lab_OpenCv)
+# Lab_B[:,2] = 0.0
+# b_B = Lab_B[:,0]
+# a_B = Lab_B[:,1]
+# L_B = Lab_B[:,2]
+# 
+# Broccoli_LABEL = 1.*np.ones(len(xyz_B))
+# features_B = np.vstack((omn_n_B, dif_elev_n_B, L_B, a_B, b_B, Broccoli_LABEL)).T # Lab !!!!!!!!!!
+# =============================================================================
 
 
 Broccoli_LABEL = 1.*np.ones(len(xyz_B))
 features_B = np.vstack((dif_elev_n_B, omn_n_B, scat_n_B, an_n_B, dif_elev_n_B, r_n_B, g_n_B, b_n_B, Broccoli_LABEL)).T # When use rgb std works better
 
 
-features_B = np.vstack((omn_n_B, dif_elev_n_B, R,G,B)).T
+features_B = np.vstack((omn_n_B, dif_elev_n_B, R, G ,B, Broccoli_LABEL)).T
 #features_B = np.vstack((omn_n_B, lin_n_B, plan_n_B, scat_n_B, an_n_B, ch_cur_n_B, mean_el_n_B, dif_elev_n_B, r_n_B, g_n_B, b_n_B)).T
 #features_B = np.vstack((omn_n_B, lin_n_B, plan_n_B, scat_n_B, an_n_B, ch_cur_n_B, mean_el_n_B, dif_elev_n_B, L_B, a_B, b_B)).T
 
-
-features_B = pca2.fit_transform(features_B)
-features_B = np.insert(features_B, 5, Broccoli_LABEL, axis=1)
+#pca
+# =============================================================================
+# features_B = pca2.fit_transform(features_B)
+# features_B = np.insert(features_B, 5, Broccoli_LABEL, axis=1)
+# =============================================================================
 
 
 
@@ -178,7 +187,7 @@ Grass = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\
            
 data_las = File(Grass, mode='r') 
 
-xyz_G = np.vstack([data_las.X, data_las.Y, data_las.Z]).transpose()
+xyz_G = np.vstack([data_las.x, data_las.y, data_las.z]).transpose()
 rgb_G = ((np.c_[data_las.Red, data_las.Green, data_las.Blue]) / 255.) / 255. #normalized
 R = rgb_G[:,0]
 G = rgb_G[:,1]
@@ -195,9 +204,21 @@ r_n_G = (R - R.min()) / (R.max() - R.min())
 g_n_G = (G - G.min()) / (G.max() - G.min())
 b_n_G = (B - B.min()) / (B.max() - B.min())
 
+#normalize the xyz
+transformer = Normalizer().fit(xyz_G)
+xyz_GG = transformer.transform(xyz_G)
+
+#standarlize the xyz
+median_xyz = np.median(a=xyz_G,axis=0)
+std_xyz = np.std(a=xyz_G,axis=0)
+x_std_G = (xyz_G[:,0] - median_xyz[0])/std_xyz[0]
+y_std_G = (xyz_G[:,1] - median_xyz[1])/std_xyz[1]
+z_std_G = (xyz_G[:,2] - median_xyz[2])/std_xyz[2]
+xyz_std_G = np.vstack([x_std_G,y_std_G,z_std_G]).T
+
 from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
-nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_G) #['auto', 'ball_tree', 'kd_tree', 'brute']
-distances, indices_G = nbrs.kneighbors(xyz_G) #the indices of the nearest neighbors 
+nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_std_G) #['auto', 'ball_tree', 'kd_tree', 'brute']
+distances, indices_G = nbrs.kneighbors(xyz_std_G) #the indices of the nearest neighbors 
 
 linearity = []
 planarity = []
@@ -248,16 +269,6 @@ ch = np.asarray(change_curvature)
 m_e = np.asarray(mean_elev)
 d_e = np.asarray(dif_elev)
 
-#standardization is used for PCA. preprocessing.StandardScaler does not work for me, hence manually..
-omn_std_G = (omnivariance-omnivariance.mean())/omnivariance.std()
-lin_std_G = (l-l.mean())/l.std()
-plan_std_G = (p-p.mean())/p.std()
-scat_std_G = (s-s.mean())/s.std()
-an_std_G = (an-an.mean())/an.std()
-ch_cur_std_G = (ch-ch.mean())/ch.std()
-mean_el_std_G = (m_e-m_e.mean())/m_e.std()
-dif_elev_std_G = (d_e-d_e.mean())/d_e.std()
-
 #normalization of the data 
 omn_n_G = (omnivariance -omnivariance.min()) / (omnivariance.max() - omnivariance.min())
 lin_n_G = (l -l.min()) / (l.max() - l.min())
@@ -269,47 +280,53 @@ mean_el_n_G = (m_e -m_e.min()) / (m_e.max() - m_e.min())
 dif_elev_n_G = (d_e -d_e.min()) / (d_e.max() - d_e.min())
 
 # from BGR to Lab # https://gist.github.com/bikz05/6fd21c812ef6ebac66e1
-def func(t):
-    if (t > 0.008856):
-        return np.power(t, 1/3.0);
-    else:
-        return 7.787 * t + 16 / 116.0;
-matrix = [[0.412453, 0.357580, 0.180423],
-          [0.212671, 0.715160, 0.072169],
-          [0.019334, 0.119193, 0.950227]]
-Lab_OpenCv = []
-Lab_G = np.zeros((len(rgb_G),3))
-for row in rgb_G:
-    cie = np.dot(matrix, row);
-    cie[0] = cie[0] /0.950456;
-    cie[2] = cie[2] /1.088754; 
-    L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
-    a = 500*(func(cie[0]) - func(cie[1]));
-    b = 200*(func(cie[1]) - func(cie[2]));
-    Lab_B = [b , a, L]; 
-    L = L * 255 / 100;
-    a = a + 128;
-    b = b + 128;
-    Lab_OpenCv.append([b,a,L])
-Lab_OpenCv = np.asarray(Lab_OpenCv)
-scaler = MinMaxScaler()
-Lab_G = scaler.fit_transform(Lab_OpenCv)
-Lab_G[:,2] = 0.0
-b_G = Lab_G[:,0]
-a_G = Lab_G[:,1]
-L_G = Lab_G[:,2]
-
-features_G = np.vstack((omn_n_G, dif_elev_n_G, L_G, a_G, b_G, Grass_LABEL)).T # Lab !!!!!!!!!!
+# =============================================================================
+# def func(t):
+#     if (t > 0.008856):
+#         return np.power(t, 1/3.0);
+#     else:
+#         return 7.787 * t + 16 / 116.0;
+# matrix = [[0.412453, 0.357580, 0.180423],
+#           [0.212671, 0.715160, 0.072169],
+#           [0.019334, 0.119193, 0.950227]]
+# Lab_OpenCv = []
+# Lab_G = np.zeros((len(rgb_G),3))
+# for row in rgb_G:
+#     cie = np.dot(matrix, row);
+#     cie[0] = cie[0] /0.950456;
+#     cie[2] = cie[2] /1.088754; 
+#     L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
+#     a = 500*(func(cie[0]) - func(cie[1]));
+#     b = 200*(func(cie[1]) - func(cie[2]));
+#     Lab_B = [b , a, L]; 
+#     L = L * 255 / 100;
+#     a = a + 128;
+#     b = b + 128;
+#     Lab_OpenCv.append([b,a,L])
+# Lab_OpenCv = np.asarray(Lab_OpenCv)
+# scaler = MinMaxScaler()
+# Lab_G = scaler.fit_transform(Lab_OpenCv)
+# Lab_G[:,2] = 0.0
+# b_G = Lab_G[:,0]
+# a_G = Lab_G[:,1]
+# L_G = Lab_G[:,2]
+# 
+# Grass_LABEL = 2.*np.ones(len(xyz_G))
+# features_G = np.vstack((omn_n_G, dif_elev_n_G, L_G, a_G, b_G, Grass_LABEL)).T # Lab !!!!!!!!!!
+# =============================================================================
 
 Grass_LABEL = 2.*np.ones(len(xyz_G))
 features_G = np.vstack(( dif_elev_n_G, omn_n_G, scat_n_G, an_n_G,  dif_elev_n_G, r_n_G, g_n_G, b_n_G, Grass_LABEL)).T
 
 
-features_G = np.vstack((omn_n_G, dif_elev_n_G, R,G,B)).T
+features_G = np.vstack((omn_n_G, dif_elev_n_G, R, G, B, Grass_LABEL)).T
 #features_G = np.vstack((omn_n_G, lin_n_G, plan_n_G, scat_n_G, an_n_G, ch_cur_n_G, mean_el_n_G, dif_elev_n_G, r_n_G, g_n_G, b_n_G)).T
 
-features_G = pca2.fit_transform(features_G)
-features_G = np.insert(features_G, 5, Grass_LABEL, axis=1)
+#pca
+# =============================================================================
+# features_G = pca2.fit_transform(features_G)
+# features_G = np.insert(features_G, 5, Grass_LABEL, axis=1)
+# =============================================================================
 
 
 
@@ -332,7 +349,7 @@ Soil = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\B
            
 data_las = File(Soil, mode='r') 
 
-xyz_S = np.vstack([data_las.X, data_las.Y, data_las.Z]).transpose()
+xyz_S = np.vstack([data_las.x, data_las.y, data_las.z]).transpose()
 rgb_S = ((np.c_[data_las.Red, data_las.Green, data_las.Blue]) / 255.) / 255. #normalized
 R = rgb_S[:,0]
 G = rgb_S[:,1]
@@ -349,9 +366,21 @@ r_n_S = (R - R.min()) / (R.max() - R.min())
 g_n_S = (G - G.min()) / (G.max() - G.min())
 b_n_S = (B - B.min()) / (B.max() - B.min())
 
+#normalize the xyz
+transformer = Normalizer().fit(xyz_S)
+xyz_SS = transformer.transform(xyz_S)
+
+#standarlize the xyz
+median_xyz = np.median(a=xyz_B,axis=0)
+std_xyz = np.std(a=xyz_B,axis=0)
+x_std_S = (xyz_S[:,0] - median_xyz[0])/std_xyz[0]
+y_std_S = (xyz_S[:,1] - median_xyz[1])/std_xyz[1]
+z_std_S = (xyz_S[:,2] - median_xyz[2])/std_xyz[2]
+xyz_std_S = np.vstack([x_std_S,y_std_S,z_std_S]).T
+
 from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
-nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_S) #['auto', 'ball_tree', 'kd_tree', 'brute']
-distances, indices_S = nbrs.kneighbors(xyz_S) #the indices of the nearest neighbors 
+nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_std_S) #['auto', 'ball_tree', 'kd_tree', 'brute']
+distances, indices_S = nbrs.kneighbors(xyz_std_S) #the indices of the nearest neighbors 
 
 linearity = []
 planarity = []
@@ -423,47 +452,53 @@ mean_el_n_S = (m_e -m_e.min()) / (m_e.max() - m_e.min())
 dif_elev_n_S = (d_e -d_e.min()) / (d_e.max() - d_e.min())
 
 # from BGR to Lab # https://gist.github.com/bikz05/6fd21c812ef6ebac66e1
-def func(t):
-    if (t > 0.008856):
-        return np.power(t, 1/3.0);
-    else:
-        return 7.787 * t + 16 / 116.0;
-matrix = [[0.412453, 0.357580, 0.180423],
-          [0.212671, 0.715160, 0.072169],
-          [0.019334, 0.119193, 0.950227]]
-Lab_OpenCv = []
-Lab_S = np.zeros((len(rgb_S),3))
-for row in rgb_S:
-    cie = np.dot(matrix, row);
-    cie[0] = cie[0] /0.950456;
-    cie[2] = cie[2] /1.088754; 
-    L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
-    a = 500*(func(cie[0]) - func(cie[1]));
-    b = 200*(func(cie[1]) - func(cie[2]));
-    Lab_B = [b , a, L]; 
-    L = L * 255 / 100;
-    a = a + 128;
-    b = b + 128;
-    Lab_OpenCv.append([b,a,L])
-Lab_OpenCv = np.asarray(Lab_OpenCv)
-scaler = MinMaxScaler()
-Lab_S = scaler.fit_transform(Lab_OpenCv)
-Lab_S[:,2] = 0.0
-b_S = Lab_S[:,0]
-a_S = Lab_S[:,1]
-L_S = Lab_S[:,2]
-
-features_S = np.vstack((omn_n_S, dif_elev_n_S, L_S, a_S, b_S, Soil_LABEL)).T # Lab !!!!!!!!!!
+# =============================================================================
+# def func(t):
+#     if (t > 0.008856):
+#         return np.power(t, 1/3.0);
+#     else:
+#         return 7.787 * t + 16 / 116.0;
+# matrix = [[0.412453, 0.357580, 0.180423],
+#           [0.212671, 0.715160, 0.072169],
+#           [0.019334, 0.119193, 0.950227]]
+# Lab_OpenCv = []
+# Lab_S = np.zeros((len(rgb_S),3))
+# for row in rgb_S:
+#     cie = np.dot(matrix, row);
+#     cie[0] = cie[0] /0.950456;
+#     cie[2] = cie[2] /1.088754; 
+#     L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
+#     a = 500*(func(cie[0]) - func(cie[1]));
+#     b = 200*(func(cie[1]) - func(cie[2]));
+#     Lab_B = [b , a, L]; 
+#     L = L * 255 / 100;
+#     a = a + 128;
+#     b = b + 128;
+#     Lab_OpenCv.append([b,a,L])
+# Lab_OpenCv = np.asarray(Lab_OpenCv)
+# scaler = MinMaxScaler()
+# Lab_S = scaler.fit_transform(Lab_OpenCv)
+# Lab_S[:,2] = 0.0
+# b_S = Lab_S[:,0]
+# a_S = Lab_S[:,1]
+# L_S = Lab_S[:,2]
+# 
+# Soil_LABEL = 3.*np.ones(len(xyz_S))
+# features_S = np.vstack((omn_n_S, dif_elev_n_S, L_S, a_S, b_S, Soil_LABEL)).T # Lab !!!!!!!!!!
+# =============================================================================
 
 Soil_LABEL = 3.*np.ones(len(xyz_S))
 features_S = np.vstack((dif_elev_n_S, omn_n_S, scat_n_S, an_n_S,  dif_elev_n_S, r_n_S, g_n_S, b_n_S, Soil_LABEL)).T
 
 
-features_S = np.vstack((omn_n_S, dif_elev_n_S, R,G,B)).T
+features_S = np.vstack((omn_n_S, dif_elev_n_S, R, G, B, Soil_LABEL)).T
 #features_S = np.vstack((omn_n_S, lin_n_S, plan_n_S, scat_n_S, an_n_S, ch_cur_n_S, mean_el_n_S, dif_elev_n_S, r_n_S, g_n_S, b_n_S)).T
 
-features_S = pca2.fit_transform(features_S)
-features_S = np.insert(features_S, 5, Soil_LABEL, axis=1)
+#pca
+# =============================================================================
+# features_S = pca2.fit_transform(features_S)
+# features_S = np.insert(features_S, 5, Soil_LABEL, axis=1)
+# =============================================================================
 
 
 # =============================================================================
@@ -488,8 +523,10 @@ features_S = np.insert(features_S, 5, Soil_LABEL, axis=1)
 #feature_names = ['omnivariance','linearity','planarity','scattering','anisotropy','chan_curvature','dif_elev','R','G','B','label']
 #feature_names = ['omnivariance','linearity','planarity','scattering','anisotropy','chan_curvature','dif_elev','label']
 #feature_names = ['omnivariance','linearity','planarity','chan_curvature','R','G','B','label']
-feature_names = ['dif_elev','omnivariance','scattering','anisotropy','dif_elev', 'R', 'G', 'B', 'label']
-feature_names = ['1','2','dif_elev','4','5','label']
+#feature_names = ['dif_elev','omnivariance','scattering','anisotropy','dif_elev', 'R', 'G', 'B', 'label']
+feature_names = ['omn','dif_elev','R','G','B','label']
+#feature_names = ['omnivariance','difference in elevation','L','a','b','label'] #Lab
+
 
 
 
@@ -529,7 +566,7 @@ np.asarray(last_column)
 #features = np.vstack(((dif_elev_std, omn_std, scat_std, an_std, r_std, g_std, b_std))).T
 
 #features = np.vstack(((dif_elev_std, omn_std, scat_std,an_std, ))).T #standarlized features
-features = np.vstack((dif_elev_n, omn_n, scat_n,an_n,dif_elev_n, r_n, g_n, b_n) ).T #Normalized features
+#features = np.vstack((dif_elev_n, omn_n, scat_n,an_n,dif_elev_n, r_n, g_n, b_n) ).T #Normalized features
 
 
 
@@ -537,23 +574,9 @@ features = np.vstack((dif_elev_n, omn_n, scat_n,an_n,dif_elev_n, r_n, g_n, b_n) 
 #feature_names = ['omnivariance','linearity','planarity','scattering','anisotropy','eigenotropy','chan_curvature','mean_elev','dif_elev','R','G','B']
 #feature_names = ['omnivariance','linearity','planarity','scattering','anisotropy','chan_curvature', 'dif_elev','R','G','B']
 #feature_names = ['omnivariance','linearity','planarity','chan_curvature','R','G','B']
-feature_names = ['dif_elev','omnivariance','scattering','anisotropy','dif-elev', 'R', 'G', 'B']
-feature_names = ['omnivariance','difference in elevation','L','a','b'] #Lab
-
-xx = pd.DataFrame(features, columns=feature_names)
-
-yy_pred = clr.predict(xx)
-v = pptk.viewer(xyz,yy_pred)
-v.set(point_size=7)
-
-#%% 2 test the clasifier with some of the geometrical features
-
-#features = np.vstack((omn_std, lin_std, plan_std, scat_std, an_std, ch_cur_std, dif_elev_std, r_std, g_std, b_std)).T
-features = np.vstack((omn_std, lin_std, plan_std, scat_std, an_std, ch_cur_std, dif_elev_std)).T
-
-#feature_names = ['omnivariance','linearity','planarity','scattering','anisotropy','chan_curvature','dif_elev','R','G','B']
-feature_names = ['omnivariance','linearity','planarity','scattering','anisotropy','chan_curvature','dif_elev']
-
+#feature_names = ['dif_elev','omnivariance','scattering','anisotropy','dif-elev', 'R', 'G', 'B']
+feature_names = ['omnivariance','difference in elevation','R','G','B'] #RGB
+#feature_names = ['omnivariance','difference in elevation','L','a','b'] #Lab
 
 xx = pd.DataFrame(features, columns=feature_names)
 

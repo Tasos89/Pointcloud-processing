@@ -28,6 +28,9 @@ import laspy.header
 #plant shape path
 input_plant_path = r"D:\New folder\Nieuwe map\merged_shapes.shp"
 #pointcloud folder
+
+
+
 folder = r'G:\Shared drives\400 Development\Student Assignments\Interns\Tasos\Sample_data\Broccoli\wgs84'
 
 output_folder = r'G:\Shared drives\400 Development\Student Assignments\Interns\Tasos\Sample_data\Broccoli'
