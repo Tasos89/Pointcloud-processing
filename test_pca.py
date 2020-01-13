@@ -1,7 +1,7 @@
 #################https://towardsdatascience.com/point-cloud-data-simple-approach-f3855fdc08f5    #############
 #PCA model
 #%% 
-#import packages 
+# import packages 
 import os
 import pptk
 import numpy as np
@@ -17,18 +17,20 @@ from sklearn.preprocessing import Normalizer
 
 #%%
 
-folder = r'C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\35m'
+input_folder = r'C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\35m' #35m Broccoli
+# =============================================================================
+# input_folder = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\AZ74_10m-0-1 - Cloud.las" #10m Broccoli
+# data_las = File(folder_10m, mode = 'r')
+# =============================================================================
 
 las_files = []
-
-for root, dirs, files in os.walk(folder, topdown=True):
+for root, dirs, files in os.walk(input_folder, topdown=True):
     for name in files:
         if name[-4:] == ".las":
             las_files.append(os.path.join(root,name).replace("\\","/"))
-            
-data_las = File(las_files[45], mode='r') #39 has big differences
+data_las = File(las_files[45], mode='r') 
 
-xyz = np.vstack([data_las.X, data_las.Y, data_las.Z]).transpose()
+xyz = np.vstack([data_las.x, data_las.y, data_las.z]).transpose()
 rgb = ((np.c_[data_las.Red, data_las.Green, data_las.Blue]) / 255.) / 255. #normalized
 R = rgb[:,0]
 G = rgb[:,1]
@@ -37,32 +39,24 @@ x = xyz[:,0]
 y = xyz[:,1]
 z = xyz[:,2]
 
-#remove the median and divide by std = standarlize the data
-#We normalize the data because...https://stats.stackexchange.com/questions/287425/why-do-you-need-to-scale-data-in-knn
-transformer = Normalizer().fit(xyz)
-xyz_n = transformer.transform(xyz)
+# We normalize the data because...https://stats.stackexchange.com/questions/287425/why-do-you-need-to-scale-data-in-knn
+xn = (x - x.min()) / (x.max() - x.min())
+yn = (y - y.min()) / (y.max() - y.min())
+zn = (z - z.min()) / (z.max() - z.min())
+xyz_nn = np.vstack([xn,yn,zn]).T
 
-median = np.median(a=xyz,axis=0) #standarlization
+# Remove the median and divide by std = standarlize the data
+median = np.median(a=xyz,axis=0)
 std = np.std(a=xyz,axis=0)
 x_std = (x - median[0])/std[0]
 y_std = (y - median[1])/std[1]
 z_std = (z - median[2])/std[2]
 xyz_std = np.vstack([x_std,y_std,z_std]).T
 
-median_rgb = np.median(a=rgb,axis=0)
-std_rgb = np.std(a=rgb,axis=0)
-r_std = (R - median_rgb[0])/std_rgb[0]
-g_std = (G - median_rgb[1])/std_rgb[1]
-b_std = (B - median_rgb[2])/std_rgb[2]
-rgb_std = np.vstack([r_std,g_std,b_std]).T
-
-#normalize the rgb
-r_n = (R - R.min()) / (R.max() - R.min())
-g_n = (G - G.min()) / (G.max() - G.min())
-b_n = (B - B.min()) / (B.max() - B.min())
-rgb_n = np.vstack([r_n,g_n,b_n]).T
+# RBG values are already normalized between 0 and 1 
 
 # from BGR to Lab # https://gist.github.com/bikz05/6fd21c812ef6ebac66e1
+# The results using Lab instead of RGB was not so good, hence changing the color space didn't work for early crop data
 # =============================================================================
 # def func(t):
 #     if (t > 0.008856):
@@ -110,73 +104,23 @@ rgb_n = np.vstack([r_n,g_n,b_n]).T
 # L = Lab[:,2]
 # =============================================================================
 
-#%%
-#10m resolution of broccoli crops
-# =============================================================================
-# =============================================================================
-# # las_files = []
-# # 
-# # folder_10m =  r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\AZ74_10m-1-0 - Cloud.las"
-# # for root, dirs, files in os.walk(folder_10m, topdown=True):
-# #     for name in files:
-# #         if name[-4:] == ".las":
-# #             las_files.append(os.path.join(root,name).replace("\\","/"))
-# #             data_las = File(las_files[0], mode='r') 
-# =============================================================================
-# =============================================================================
-folder_10m = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\AZ74_10m-0-1 - Cloud.las"
-data_las = File(folder_10m, mode = 'r')
-xyz = np.vstack([data_las.X, data_las.Y, data_las.Z]).transpose()
-rgb = ((np.c_[data_las.Red, data_las.Green, data_las.Blue]) / 255.) / 255.
-R = rgb[:,0]
-G = rgb[:,1]
-B = rgb[:,2]
-
-x = xyz[:,0]
-y = xyz[:,1]
-z = xyz[:,2]
-
-#remove the median 
-# =============================================================================
-# median = np.median(a=xyz,axis=0)
-# xn = x - median[0]
-# yn = y - median[1]
-# zn = z - median[2]
-# xyz_new = np.vstack([xn,yn,zn]).T
-# =============================================================================
-
-#Standarlize the data
-#We standarlize the data because...https://stats.stackexchange.com/questions/287425/why-do-you-need-to-scale-data-in-knn
-
-median = np.median(a=xyz,axis=0)
-std = np.std(a=xyz,axis=0)
-x_std = (x - median[0])/std[0]
-y_std = (y - median[1])/std[1]
-z_std = (z - median[2])/std[2]
-xyz_std = np.vstack([x_std,y_std,z_std]).T
-
-median_rgb = np.median(a=rgb,axis=0)
-std_rgb = np.std(a=rgb,axis=0)
-r_std = (R - median_rgb[0])/std_rgb[0]
-g_std = (G - median_rgb[1])/std_rgb[1]
-b_std = (B - median_rgb[2])/std_rgb[2]
-rgb_std = np.vstack([r_std,g_std,b_std]).T
-
-
-
 #%% 
-#Nearest neighbors 
-
-
+# Nearest neighbors with normalized data. The confusion matrix return better results but the visualization was not so good
 
 from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
-nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_std) #['auto', 'ball_tree', 'kd_tree', 'brute']
-distances, indices = nbrs.kneighbors(xyz_std) #the indices of the nearest neighbors 
+nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_nn) #['auto', 'ball_tree', 'kd_tree', 'brute']
+distances, indices = nbrs.kneighbors(xyz_nn) #the indices of the nearest neighbors 
 
+# Nearest neigbors with standarlized data
 
+# =============================================================================
+# from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
+# nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_std) #['auto', 'ball_tree', 'kd_tree', 'brute']
+# distances, indices = nbrs.kneighbors(xyz_std) #the indices of the nearest neighbors 
+# =============================================================================
 
 #%% 
-#pca
+# extraction of geometrical features among the nearest neighbors 
 # https://towardsdatascience.com/an-approach-to-choosing-the-number-of-components-in-a-principal-component-analysis-pca-3b9f3d6e73fe
 
 linearity = []
@@ -190,11 +134,12 @@ dif_elev = []
 mean_elev = []
 omnivariance = []
 
-#@jit(nopython=True)
 for i in range(len(indices)):
     ind = indices[i]
-    coords = xyz_std[(ind),:]
-    #coords = xyz[(ind),:]
+    coords = xyz_nn[(ind),:] # for normalize data
+    #coords = xyz_std[(ind),:] #for standarlize
+    
+
 
     x = coords[:,0]
     y = coords[:,1]
@@ -230,8 +175,8 @@ for i in range(len(indices)):
     d_el = z.max()-z.min()
     dif_elev.append(d_el)
      
-#normalization
-#https://stats.stackexchange.com/questions/69157/why-do-we-need-to-normalize-data-before-principal-component-analysis-pca
+# normalization of the geometrical features
+# https://stats.stackexchange.com/questions/69157/why-do-we-need-to-normalize-data-before-principal-component-analysis-pca
 omnivariance = np.asarray(omnivariance)
 omn_n = (omnivariance -omnivariance.min()) / (omnivariance.max() - omnivariance.min())
 l = np.asarray(linearity)

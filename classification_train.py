@@ -1,5 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jan 13 12:14:02 2020
+
+@author: tasos
+"""
 #Iris example https://towardsdatascience.com/decision-tree-in-python-b433ae57fb93
-#%% broccoli label=1
+#%% broccoli label=1 
 from sklearn.datasets import load_iris
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
@@ -14,7 +20,7 @@ import pptk
 import math
 from laspy.file import File
 
-Broccoli = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\classes\broccoli3.las"
+Broccoli = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\classes\broccoli3.las" #ground truth data
            
 data_las = File(Broccoli, mode='r') 
 
@@ -53,15 +59,17 @@ zn = (data_las.z - data_las.z.min()) / (data_las.z.max() - data_las.z.min())
 xyz_nn = np.vstack([xn,yn,zn]).T
 
 
+from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
+nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_std_B) #['auto', 'ball_tree', 'kd_tree', 'brute']
+distances, indices_B = nbrs.kneighbors(xyz_std_B) #the indices of the nearest neighbors 
+
 # =============================================================================
 # from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
-# nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_std_BB) #['auto', 'ball_tree', 'kd_tree', 'brute']
-# distances, indices_B = nbrs.kneighbors(xyz_std_B) #the indices of the nearest neighbors 
+# nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_nn) #['auto', 'ball_tree', 'kd_tree', 'brute']
+# distances, indices_B = nbrs.kneighbors(xyz_nn) #the indices of the nearest neighbors 
 # =============================================================================
 
-from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
-nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_nn) #['auto', 'ball_tree', 'kd_tree', 'brute']
-distances, indices_B = nbrs.kneighbors(xyz_nn) #the indices of the nearest neighbors 
+
 
 linearity = []
 planarity = []
@@ -76,8 +84,8 @@ omnivariance = []
 
 for i in range(len(indices_B)):
     ind = indices_B[i]
-    #coords = xyz_B[(ind),:]
-    coords = xyz_nn[(ind),:]
+    coords = xyz_B[(ind),:]
+    #coords = xyz_nn[(ind),:]
     x = coords[:,0]
     y = coords[:,1]
     z = coords[:,2]
@@ -172,7 +180,7 @@ features_B = np.vstack((omn_n_B, dif_elev_n_B, R, G ,B, Broccoli_LABEL)).T
 
 #pca
 # =============================================================================
-# features_B = pca2.fit_transform(features_B)
+# features_B = pca.fit_transform(features_B)
 # features_B = np.insert(features_B, 5, Broccoli_LABEL, axis=1)
 # =============================================================================
 
@@ -232,15 +240,17 @@ yn = (data_las.y - data_las.y.min()) / (data_las.y.max() - data_las.y.min())
 zn = (data_las.z - data_las.z.min()) / (data_las.z.max() - data_las.z.min())
 xyz_nn = np.vstack([xn,yn,zn]).T
 
+from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
+nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_std_G) #['auto', 'ball_tree', 'kd_tree', 'brute']
+distances, indices_G = nbrs.kneighbors(xyz_std_G) #the indices of the nearest neighbors 
+
 # =============================================================================
 # from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
-# nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_std_G) #['auto', 'ball_tree', 'kd_tree', 'brute']
-# distances, indices_G = nbrs.kneighbors(xyz_std_G) #the indices of the nearest neighbors 
+# nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_nn) #['auto', 'ball_tree', 'kd_tree', 'brute']
+# distances, indices_G = nbrs.kneighbors(xyz_nn) #the indices of the nearest neighbors 
 # =============================================================================
 
-from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
-nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_nn) #['auto', 'ball_tree', 'kd_tree', 'brute']
-distances, indices_G = nbrs.kneighbors(xyz_nn) #the indices of the nearest neighbors 
+
 
 linearity = []
 planarity = []
@@ -254,8 +264,8 @@ omnivariance = []
 
 for i in range(len(indices_G)):
     ind = indices_G[i]
-    #coords = xyz_G[(ind),:]
-    coords = xyz_nn[(ind),:]
+    coords = xyz_G[(ind),:]
+    #coords = xyz_nn[(ind),:]
     x = coords[:,0]
     y = coords[:,1]
     z = coords[:,2]
@@ -407,15 +417,17 @@ zn = (data_las.z - data_las.z.min()) / (data_las.z.max() - data_las.z.min())
 xyz_nn = np.vstack([xn,yn,zn]).T
 
 
+from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
+nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_std_S) #['auto', 'ball_tree', 'kd_tree', 'brute']
+distances, indices_S = nbrs.kneighbors(xyz_std_S) #the indices of the nearest neighbors 
+
 # =============================================================================
 # from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
-# nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_std_S) #['auto', 'ball_tree', 'kd_tree', 'brute']
-# distances, indices_S = nbrs.kneighbors(xyz_std_S) #the indices of the nearest neighbors 
+# nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_nn) #['auto', 'ball_tree', 'kd_tree', 'brute']
+# distances, indices_S = nbrs.kneighbors(xyz_nn) #the indices of the nearest neighbors 
 # =============================================================================
 
-from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
-nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_nn) #['auto', 'ball_tree', 'kd_tree', 'brute']
-distances, indices_S = nbrs.kneighbors(xyz_nn) #the indices of the nearest neighbors 
+
 
 linearity = []
 planarity = []
@@ -429,8 +441,8 @@ omnivariance = []
 
 for i in range(len(indices_S)):
     ind = indices_S[i]
-    #coords = xyz_S[(ind),:]
-    coords = xyz_nn[(ind),:]
+    coords = xyz_S[(ind),:]
+    #coords = xyz_nn[(ind),:]
     x = coords[:,0]
     y = coords[:,1]
     z = coords[:,2]
@@ -466,16 +478,6 @@ an = np.asarray(anisotropy)
 ch = np.asarray(change_curvature)
 m_e = np.asarray(mean_elev)
 d_e = np.asarray(dif_elev)
-
-#standardization is used for PCA. preprocessing.StandardScaler does not work for me, hence manually..
-omn_std_S = (omnivariance-omnivariance.mean())/omnivariance.std()
-lin_std_S = (l-l.mean())/l.std()
-plan_std_S = (p-p.mean())/p.std()
-scat_std_S = (s-s.mean())/s.std()
-an_std_S = (an-an.mean())/an.std()
-ch_cur_std_S = (ch-ch.mean())/ch.std()
-mean_el_std_S = (m_e-m_e.mean())/m_e.std()
-dif_elev_std_S = (d_e-d_e.mean())/d_e.std()
 
 #normalization of the data 
 omn_n_S = (omnivariance -omnivariance.min()) / (omnivariance.max() - omnivariance.min())
@@ -619,6 +621,7 @@ xx = pd.DataFrame(features, columns=feature_names)
 yy_pred = clr.predict(xx)
 v = pptk.viewer(xyz,yy_pred)
 
+
 #%% Random forest
 # https://blog.goodaudience.com/machine-learning-using-decision-trees-and-random-forests-in-python-with-code-e50f6e14e19f
 from sklearn.ensemble import RandomForestClassifier
@@ -637,5 +640,6 @@ v = pptk.viewer(xyz,yyyy_pred)
 
 
  
+
 
 
