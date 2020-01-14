@@ -84,7 +84,7 @@ omnivariance = []
 
 for i in range(len(indices_B)):
     ind = indices_B[i]
-    coords = xyz_B[(ind),:]
+    coords = xyz_std_B[(ind),:]
     #coords = xyz_nn[(ind),:]
     x = coords[:,0]
     y = coords[:,1]
@@ -171,7 +171,7 @@ dif_elev_n_B = (d_e -d_e.min()) / (d_e.max() - d_e.min())
 
 
 Broccoli_LABEL = 1.*np.ones(len(xyz_B))
-features_B = np.vstack((dif_elev_n_B, omn_n_B, scat_n_B, an_n_B, dif_elev_n_B, r_n_B, g_n_B, b_n_B, Broccoli_LABEL)).T # When use rgb std works better
+#features_B = np.vstack((dif_elev_n_B, omn_n_B, scat_n_B, an_n_B, dif_elev_n_B, r_n_B, g_n_B, b_n_B, Broccoli_LABEL)).T # When use rgb std works better
 
 
 features_B = np.vstack((omn_n_B, dif_elev_n_B, R, G ,B, Broccoli_LABEL)).T
@@ -264,7 +264,7 @@ omnivariance = []
 
 for i in range(len(indices_G)):
     ind = indices_G[i]
-    coords = xyz_G[(ind),:]
+    coords = xyz_std_G[(ind),:]
     #coords = xyz_nn[(ind),:]
     x = coords[:,0]
     y = coords[:,1]
@@ -349,7 +349,7 @@ dif_elev_n_G = (d_e -d_e.min()) / (d_e.max() - d_e.min())
 # =============================================================================
 
 Grass_LABEL = 2.*np.ones(len(xyz_G))
-features_G = np.vstack(( dif_elev_n_G, omn_n_G, scat_n_G, an_n_G,  dif_elev_n_G, r_n_G, g_n_G, b_n_G, Grass_LABEL)).T
+#features_G = np.vstack(( dif_elev_n_G, omn_n_G, scat_n_G, an_n_G,  dif_elev_n_G, r_n_G, g_n_G, b_n_G, Grass_LABEL)).T
 
 
 features_G = np.vstack((omn_n_G, dif_elev_n_G, R, G, B, Grass_LABEL)).T
@@ -441,7 +441,7 @@ omnivariance = []
 
 for i in range(len(indices_S)):
     ind = indices_S[i]
-    coords = xyz_S[(ind),:]
+    coords = xyz_std_S[(ind),:]
     #coords = xyz_nn[(ind),:]
     x = coords[:,0]
     y = coords[:,1]
@@ -526,7 +526,7 @@ dif_elev_n_S = (d_e -d_e.min()) / (d_e.max() - d_e.min())
 # =============================================================================
 
 Soil_LABEL = 3.*np.ones(len(xyz_S))
-features_S = np.vstack((dif_elev_n_S, omn_n_S, scat_n_S, an_n_S,  dif_elev_n_S, r_n_S, g_n_S, b_n_S, Soil_LABEL)).T
+#features_S = np.vstack((dif_elev_n_S, omn_n_S, scat_n_S, an_n_S,  dif_elev_n_S, r_n_S, g_n_S, b_n_S, Soil_LABEL)).T
 
 
 features_S = np.vstack((omn_n_S, dif_elev_n_S, R, G, B, Soil_LABEL)).T

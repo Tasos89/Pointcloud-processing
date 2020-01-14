@@ -120,8 +120,8 @@ xmin = np.floor(np.min(x))
 ymin = np.floor(np.min(y))
 xmax = np.ceil(np.max(x))
 ymax = np.ceil(np.max(y))
-x_grid = np.arange(xmin,xmax,1) #270 the step for capital X
-y_grid = np.arange(ymin,ymax,1)
+x_grid = np.arange(xmin,xmax,0.83) #270 the step for capital X
+y_grid = np.arange(ymin,ymax,0.83)
 ground_points = []
 
 for i in np.arange(0,len(x_grid)-1):
@@ -134,20 +134,36 @@ for i in np.arange(0,len(x_grid)-1):
 x_lowest = x[ground_points]
 y_lowest = y[ground_points]
 z_lowest = z[ground_points]
+r_lowest = R[ground_points]
+g_lowest = G[ground_points]
+b_lowest = B[ground_points]
+rgb_ground = np.vstack((r_lowest,g_lowest,b_lowest)).T
+xyz_ground = np.vstack((x_lowest,y_lowest,z_lowest)).T
+# =============================================================================
+# v = pptk.viewer(xyz_ground,rgb_ground)
+# v.set(point_size = 0.1)
+# =============================================================================
+
 x = np.delete(x,ground_points)
 y = np.delete(y,ground_points)
 z = np.delete(z,ground_points)
-xyz_lowest = np.vstack((x_lowest,y_lowest,z_lowest)).T
+r = np.delete(R,ground_points)
+g = np.delete(G,ground_points)
+b = np.delete(B,ground_points)
 
 dt = startin.DT()
-dt.insert(xyz_lowest)
+dt.insert(xyz_ground)
 
-remaining = np.concatenate((x.reshape(-1,1),y.reshape(-1,1),z.reshape(-1,1)),axis=1)
+#remaining = np.concatenate((x.reshape(-1,1),y.reshape(-1,1),z.reshape(-1,1)),axis=1)
+remaining = np.vstack((x,y,z)).T
+rgb_remaining = np.vstack((r,g,b)).T
+
 points_outside = []
 k = 0
 check = 0
 #for i in np.arange(21,22):
 #and check = 0
+#append more points in the ground (classify them as ground)
 while remaining.shape[0]>k:
     print(remaining.shape[0]-k)
     if check==1 and k==remaining.shape[0]:
@@ -196,9 +212,10 @@ while remaining.shape[0]>k:
             hor_dist = np.sqrt(np.square(vertex_rot[0]-point_rot[0,0])+np.square(vertex_rot[1]-point_rot[0,1]))
             beta[j] = np.rad2deg(np.arctan(distance/hor_dist))
         alpha = np.max(beta)
-        if distance<0.5 and alpha<20: #distance<15 and alpha<20
+        if distance<0.014 and alpha<45: #distance<15 and alpha<20 for capital X #distance<0.01 and alpha <30 for small x
             dt.insert_one_pt(x_point0,y_point0,z_point0)
             remaining = np.delete(remaining,k,0)
+            #rgb_remaining = np.delete(rgb_remaining,k,0)
             #k = 0
             k = k+1
             check = 1
@@ -213,11 +230,18 @@ ground_points = dt.all_vertices()
 ground_points = np.asarray(ground_points)
 xyz_ground = ground_points[1:,:]
 
-xyz_no_ground = remaining
-rgb_no_gro
+
 
 DTM = dt.write_obj(r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\DTM.obj")
 
+xx = x[points_outside]
+yy = y[points_outside]
+zz = z[points_outside]
+rr = R[points_outside]
+gg = G[points_outside]
+bb = B[points_outside]
+xyz_no_ground = np.vstack((xx,yy,zz)).T
+rgb_no_ground = np.vstack((rr,gg,bb)).T
         
 #%% 
 # Nearest neighbors with normalized data. The confusion matrix return better results but the visualization was not so good
@@ -243,7 +267,7 @@ planarity = []
 scatter = []
 omnivariance = []
 anisotropy = []
-eigenentropy = []
+#eigenentropy = []
 change_curvature = []
 dif_elev = []
 mean_elev = []
@@ -281,8 +305,8 @@ for i in range(len(indices)):
     scatter.append(sc)
     anis = (e[0]-e[2])/e[0]
     anisotropy.append(anis)
-    ei = -(e[0]*math.log(e[0])+e[1]*math.log(e[1])+e[2]*math.log(e[2]))
-    eigenentropy.append(ei)
+    #ei = -(e[0]*math.log(e[0])+e[1]*math.log(e[1])+e[2]*math.log(e[2]))
+    #eigenentropy.append(ei)
     cha = e[2]/sum(e)
     change_curvature.append(cha)
     m_el = z.mean()
@@ -302,8 +326,8 @@ s = np.asarray(scatter)
 scat_n = (s -s.min()) / (s.max() - s.min())
 an = np.asarray(anisotropy)
 an_n = (an -an.min()) / (an.max() - an.min())
-eig = np.asarray(eigenentropy)
-eig_n = (eig -eig.min()) / (eig.max() - eig.min())
+#eig = np.asarray(eigenentropy)
+#eig_n = (eig -eig.min()) / (eig.max() - eig.min())
 ch = np.asarray(change_curvature)
 ch_cur_n = (ch -ch.min()) / (ch.max() - ch.min())
 m_e = np.asarray(mean_elev)
