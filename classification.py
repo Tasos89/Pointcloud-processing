@@ -116,20 +116,38 @@ import startin
 
 
 #create a grid
-xmin = np.floor(np.min(x))
-ymin = np.floor(np.min(y))
-xmax = np.ceil(np.max(x))
-ymax = np.ceil(np.max(y))
-x_grid = np.arange(xmin,xmax,0.83) #270 the step for capital X
-y_grid = np.arange(ymin,ymax,0.83)
+xmin = np.min(x)
+ymin = np.min(y)
+xmax = np.max(x)
+ymax = np.max(y)
+x_grid = np.arange(xmin,xmax,0.3) #270 the step for capital X %0.83 for small x
+y_grid = np.arange(ymin,ymax,0.3)
 ground_points = []
 
 for i in np.arange(0,len(x_grid)-1):
-    for j in np.arange(0,len(y_grid)-1):  
-        points_cell = np.where((x > x_grid[i]) & (y>y_grid[j]) & (x<x_grid[i+1]) & (y<y_grid[j+1])) #indices of points "inside" the cell
-        z_points = z[points_cell[0]] #elevation of those points
-        point_lowest = points_cell[0][np.argmin(z_points)]
-        ground_points.append(point_lowest) #indices of the lowest points in every cell
+    for j in np.arange(0,len(y_grid)-1):
+        points_cell = np.where((x >= x_grid[i]) & (y>=y_grid[j]) & (x<=x_grid[i+1]) & (y<=y_grid[j+1]),True,False) #indices of points "inside" the cell
+        if points_cell[0] == False:
+            points_cell = np.where((x >= x_grid[i]) & (y>=y_grid[j]) & (x<=x_grid[i+1]) & (y<=y_grid[j+1]))
+            z_points = z[points_cell[0]] #elevation of those points
+            point_lowest = points_cell[0][np.argmin(z_points)]
+            ground_points.append(point_lowest) #indices of the lowest points in every cell
+
+# =============================================================================
+# a=0
+# for i in np.arange(0,len(x_grid)-1):
+#     for j in np.arange(0,len(y_grid)-1):  
+#         points_cell = np.where((x > x_grid[i]) & (y>y_grid[j]) & (x<x_grid[i+1]) & (y<y_grid[j+1]),True,False) #indices of points "inside" the cell
+#         if points_cell[0] == True:
+#             points_cell = np.where((x > x_grid[i]) & (y>y_grid[j]) & (x<x_grid[i+1]) & (y<y_grid[j+1]))
+#             z_points = z[points_cell[0]] #elevation of those points
+#             point_lowest = points_cell[0][np.argmin(z_points)]
+#             ground_points.append(point_lowest) #indices of the lowest points in every cell
+#             print('a')
+#         else:
+#             a+=1
+# =============================================================================
+    
         
 x_lowest = x[ground_points]
 y_lowest = y[ground_points]
@@ -170,13 +188,13 @@ while remaining.shape[0]>k:
         k=0
         check = 0
     
-    Triangle = dt.locate(remaining[k,0],remaining[k,1])
-    x_point0 = remaining[k,0]
+    Triangle = dt.locate(remaining[k,0],remaining[k,1]) #returns the indices of the points of the triangle that the remaing point be placed
+    x_point0 = remaining[k,0] #the coordinates of the remaining point that included inside the triangle
     y_point0 = remaining[k,1]
     z_point0 = remaining[k,2]
     
-    if len(Triangle)>0:
-        tri_1 = dt.get_point(Triangle[0])
+    if len(Triangle)>0: #check if the point is outside of the dt area
+        tri_1 = dt.get_point(Triangle[0]) #the coordinates of the points of the triangle
         tri_2 = dt.get_point(Triangle[1])
         tri_3 = dt.get_point(Triangle[2])
         points = np.array([tri_1,tri_2,tri_3])
@@ -212,10 +230,10 @@ while remaining.shape[0]>k:
             hor_dist = np.sqrt(np.square(vertex_rot[0]-point_rot[0,0])+np.square(vertex_rot[1]-point_rot[0,1]))
             beta[j] = np.rad2deg(np.arctan(distance/hor_dist))
         alpha = np.max(beta)
-        if distance<0.014 and alpha<45: #distance<15 and alpha<20 for capital X #distance<0.01 and alpha <30 for small x
+        if distance<0.015 and alpha<30: #distance<15 and alpha<20 for capital X #distance<0.013/0.017 and alpha <40 for small x
             dt.insert_one_pt(x_point0,y_point0,z_point0)
             remaining = np.delete(remaining,k,0)
-            #rgb_remaining = np.delete(rgb_remaining,k,0)
+            rgb_remaining = np.delete(rgb_remaining,k,0)
             #k = 0
             k = k+1
             check = 1
