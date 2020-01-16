@@ -111,7 +111,7 @@ xyz_std = np.vstack([x_std,y_std,z_std]).T
 # =============================================================================
 
 #%%
-# Define the ground points / ground filtering
+# Define the ground points / ground filtering. By doing this procedure we are incresing the discriminative power of omnivariance feature.
 import startin
 
 
@@ -120,8 +120,9 @@ xmin = np.min(x)
 ymin = np.min(y)
 xmax = np.max(x)
 ymax = np.max(y)
-x_grid = np.arange(xmin,xmax,0.3) #270 the step for capital X %0.83 for small x
-y_grid = np.arange(ymin,ymax,0.3)
+x_grid = np.arange(xmin,xmax,0.5) #270 the step for capital X %0.83 for small x
+y_grid = np.arange(ymin,ymax,0.5) #Grid cell is arround 0.5m. This ok for early broccoli crops
+                                    #Grid cell bigger than0.5m is needed for the last stage.
 ground_points = []
 
 for i in np.arange(0,len(x_grid)-1):
@@ -169,12 +170,11 @@ r = np.delete(R,ground_points)
 g = np.delete(G,ground_points)
 b = np.delete(B,ground_points)
 
-dt = startin.DT()
-dt.insert(xyz_ground)
-
-#remaining = np.concatenate((x.reshape(-1,1),y.reshape(-1,1),z.reshape(-1,1)),axis=1)
 remaining = np.vstack((x,y,z)).T
 rgb_remaining = np.vstack((r,g,b)).T
+
+dt = startin.DT()
+dt.insert(xyz_ground)
 
 points_outside = []
 k = 0
@@ -230,7 +230,7 @@ while remaining.shape[0]>k:
             hor_dist = np.sqrt(np.square(vertex_rot[0]-point_rot[0,0])+np.square(vertex_rot[1]-point_rot[0,1]))
             beta[j] = np.rad2deg(np.arctan(distance/hor_dist))
         alpha = np.max(beta)
-        if distance<0.015 and alpha<30: #distance<15 and alpha<20 for capital X #distance<0.013/0.017 and alpha <40 for small x
+        if distance<0.012 and alpha<30: #distance<15 and alpha<20 for capital X #distance<0.013/0.017 and alpha <40 for small x
             dt.insert_one_pt(x_point0,y_point0,z_point0)
             remaining = np.delete(remaining,k,0)
             rgb_remaining = np.delete(rgb_remaining,k,0)
@@ -285,7 +285,7 @@ planarity = []
 scatter = []
 omnivariance = []
 anisotropy = []
-#eigenentropy = []
+eigenentropy = []
 change_curvature = []
 dif_elev = []
 mean_elev = []
@@ -323,8 +323,8 @@ for i in range(len(indices)):
     scatter.append(sc)
     anis = (e[0]-e[2])/e[0]
     anisotropy.append(anis)
-    #ei = -(e[0]*math.log(e[0])+e[1]*math.log(e[1])+e[2]*math.log(e[2]))
-    #eigenentropy.append(ei)
+    ei = -(e[0]*math.log(e[0])+e[1]*math.log(e[1])+e[2]*math.log(e[2]))
+    eigenentropy.append(ei)
     cha = e[2]/sum(e)
     change_curvature.append(cha)
     m_el = z.mean()
@@ -344,14 +344,54 @@ s = np.asarray(scatter)
 scat_n = (s -s.min()) / (s.max() - s.min())
 an = np.asarray(anisotropy)
 an_n = (an -an.min()) / (an.max() - an.min())
-#eig = np.asarray(eigenentropy)
-#eig_n = (eig -eig.min()) / (eig.max() - eig.min())
+eig = np.asarray(eigenentropy)
+eig_n = (eig -eig.min()) / (eig.max() - eig.min())
 ch = np.asarray(change_curvature)
 ch_cur_n = (ch -ch.min()) / (ch.max() - ch.min())
 m_e = np.asarray(mean_elev)
 mean_el_n = (m_e -m_e.min()) / (m_e.max() - m_e.min())
 d_e = np.asarray(dif_elev)
 dif_elev_n = (d_e -d_e.min()) / (d_e.max() - d_e.min())
+
+#visualization
+# =============================================================================
+# v = pptk.viewer(xyz,lin_n)
+# v.set(point_size=0.005)
+# v.capture('Linearity.png')
+# 
+# v = pptk.viewer(xyz,plan_n)
+# v.set(point_size=0.005)
+# v.capture('Planarity.png')
+# 
+# v = pptk.viewer(xyz,scat_n)
+# v.set(point_size=0.005)
+# v.capture('Scattering.png')
+# 
+# v = pptk.viewer(xyz,an_n)
+# v.set(point_size=0.005)
+# v.capture('Anisotropy.png')
+# 
+# v = pptk.viewer(xyz,eig_n)
+# v.set(point_size=0.005)
+# v.capture('Eigenotropy.png')
+# 
+# 
+# v = pptk.viewer(xyz,ch_cur_n)
+# v.set(point_size=0.005)
+# v.capture('Change_of_Curvature.png')
+# 
+# v = pptk.viewer(xyz,mean_el_n)
+# v.set(point_size=0.005)
+# v.capture('Mean_elevation.png')
+# 
+# v = pptk.viewer(xyz,dif_elev_n)
+# v.set(point_size=0.005)
+# v.capture('Elevation_Difference.png')
+# 
+# v = pptk.viewer(xyz,omn_n)
+# v.set(point_size=0.005)
+# v.capture('Omnivariance.png')
+# =============================================================================
 
 #%% lecture 7 decession trees and pca (geoprocessing analysis)
 # pca for the geometrical features to define the most important features with minmaxscaler features

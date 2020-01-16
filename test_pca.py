@@ -210,7 +210,7 @@ dif_elev_std = (d_e-d_e.mean())/d_e.std()
 #visualization
 # =============================================================================
 # v = pptk.viewer(xyz,lin_std)
-# v.set(point_size=7)
+# v.set(point_size=0.02)
 # v.capture('Linearity.png')
 # 
 # v = pptk.viewer(xyz,plan_std)
@@ -225,11 +225,9 @@ dif_elev_std = (d_e-d_e.mean())/d_e.std()
 # v.set(point_size=7)
 # v.capture('Anisotropy.png')
 # 
-# # =============================================================================
-# # v = pptk.viewer(xyz,eig_std)
-# # v.set(point_size=10)
-# # v.capture('Eigenotropy.png')
-# # =============================================================================
+# v = pptk.viewer(xyz,eig_std)
+# v.set(point_size=10)
+# v.capture('Eigenotropy.png')
 # 
 # 
 # v = pptk.viewer(xyz,ch_cur_std)
@@ -275,7 +273,7 @@ features = np.vstack((omn_n, dif_elev_n, L, a, b)).T #Lab
 scaler = MinMaxScaler(feature_range=[0,1])
 data_rescaled = scaler.fit_transform(features)
 pca = PCA().fit(data_rescaled)
-#pca = PCA().fit(features)
+pca = PCA().fit(features)
 
 plt.figure()
 plt.plot(np.cumsum(pca.explained_variance_ratio_))
@@ -283,15 +281,17 @@ plt.xlabel('Number of Features')
 plt.ylabel('Variance (%)')
 plt.title('Subjective Choose of Features')
 plt.show()
+plt.savefig('pca.png')
 
 # we already have normalized data hence perhaps the minmaxscaler is redundant 
 pca1 = PCA().fit(features)
 plt.figure()
-plt.plot(np.cumsum(pca1.explained_variance_ratio_))
+plt.plot(np.cumsum(pca2.explained_variance_ratio_))
 plt.xlabel('Number of Features')
 plt.ylabel('Variance (%)')
-plt.title('Subjective Choose of Features')
+plt.title('After the redundancy')
 plt.show()
+plt.savefig('After_pca.png')
 
 #hence we can keep 5 attributes/features that have the variance of almost all the data ~100%
 pca2 = PCA(n_components=5)
