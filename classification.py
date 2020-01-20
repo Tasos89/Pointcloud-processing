@@ -112,89 +112,240 @@ xyz_std = np.vstack([x_std,y_std,z_std]).T
 
 #%%
 # Define the ground points / ground filtering. By doing this procedure we are incresing the discriminative power of omnivariance feature.
-import startin
-
-
-#create a grid
-xmin = np.min(x)
-ymin = np.min(y)
-xmax = np.max(x)
-ymax = np.max(y)
-x_grid = np.arange(xmin,xmax,0.5) #270 the step for capital X %0.83 for small x
-y_grid = np.arange(ymin,ymax,0.5) #Grid cell is arround 0.5m. This ok for early broccoli crops
-                                    #Grid cell bigger than0.5m is needed for the last stage.
-ground_points = []
-
-for i in np.arange(0,len(x_grid)-1):
-    for j in np.arange(0,len(y_grid)-1):
-        points_cell = np.where((x >= x_grid[i]) & (y>=y_grid[j]) & (x<=x_grid[i+1]) & (y<=y_grid[j+1]),True,False) #indices of points "inside" the cell
-        if points_cell[0] == False:
-            points_cell = np.where((x >= x_grid[i]) & (y>=y_grid[j]) & (x<=x_grid[i+1]) & (y<=y_grid[j+1]))
-            z_points = z[points_cell[0]] #elevation of those points
-            point_lowest = points_cell[0][np.argmin(z_points)]
-            ground_points.append(point_lowest) #indices of the lowest points in every cell
-
 # =============================================================================
-# a=0
+# import startin
+# 
+# 
+# #create a grid
+# xmin = np.min(x)
+# ymin = np.min(y)
+# xmax = np.max(x)
+# ymax = np.max(y)
+# x_grid = np.arange(xmin,xmax,0.5) #270 the step for capital X %0.83 for small x
+# y_grid = np.arange(ymin,ymax,0.5) #Grid cell is arround 0.5m. This ok for early broccoli crops
+#                                     #Grid cell bigger than0.5m is needed for the last stage.
+# ground_points = []
+# 
 # for i in np.arange(0,len(x_grid)-1):
-#     for j in np.arange(0,len(y_grid)-1):  
-#         points_cell = np.where((x > x_grid[i]) & (y>y_grid[j]) & (x<x_grid[i+1]) & (y<y_grid[j+1]),True,False) #indices of points "inside" the cell
-#         if points_cell[0] == True:
-#             points_cell = np.where((x > x_grid[i]) & (y>y_grid[j]) & (x<x_grid[i+1]) & (y<y_grid[j+1]))
+#     for j in np.arange(0,len(y_grid)-1):
+#         points_cell = np.where((x >= x_grid[i]) & (y>=y_grid[j]) & (x<=x_grid[i+1]) & (y<=y_grid[j+1]),True,False) #indices of points "inside" the cell
+#         if points_cell[0] == False:
+#             points_cell = np.where((x >= x_grid[i]) & (y>=y_grid[j]) & (x<=x_grid[i+1]) & (y<=y_grid[j+1]))
 #             z_points = z[points_cell[0]] #elevation of those points
 #             point_lowest = points_cell[0][np.argmin(z_points)]
 #             ground_points.append(point_lowest) #indices of the lowest points in every cell
-#             print('a')
+# 
+# 
+#     
+#         
+# x_lowest = x[ground_points]
+# y_lowest = y[ground_points]
+# z_lowest = z[ground_points]
+# r_lowest = R[ground_points]
+# g_lowest = G[ground_points]
+# b_lowest = B[ground_points]
+# rgb_ground = np.vstack((r_lowest,g_lowest,b_lowest)).T
+# xyz_ground = np.vstack((x_lowest,y_lowest,z_lowest)).T
+# # =============================================================================
+# # v = pptk.viewer(xyz_ground,rgb_ground)
+# # v.set(point_size = 0.1)
+# # =============================================================================
+# 
+# x = np.delete(x,ground_points)
+# y = np.delete(y,ground_points)
+# z = np.delete(z,ground_points)
+# r = np.delete(R,ground_points)
+# g = np.delete(G,ground_points)
+# b = np.delete(B,ground_points)
+# 
+# remaining = np.vstack((x,y,z)).T
+# rgb_remaining = np.vstack((r,g,b)).T
+# 
+# dt = startin.DT()
+# dt.insert(xyz_ground)
+# 
+# points_outside = []
+# k = 0
+# check = 0
+# #for i in np.arange(21,22):
+# #and check = 0
+# #append more points in the ground (classify them as ground)
+# while remaining.shape[0]>k:
+#     print(remaining.shape[0]-k)
+#     if check==1 and k==remaining.shape[0]:
+#         k=0
+#         check = 0
+#     
+#     Triangle = dt.locate(remaining[k,0],remaining[k,1]) #returns the indices of the points of the triangle that the remaing point be placed
+#     x_point0 = remaining[k,0] #the coordinates of the remaining point that included inside the triangle
+#     y_point0 = remaining[k,1]
+#     z_point0 = remaining[k,2]
+#     
+#     if len(Triangle)>0: #check if the point is outside of the dt area
+#         tri_1 = dt.get_point(Triangle[0]) #the coordinates of the points of the triangle
+#         tri_2 = dt.get_point(Triangle[1])
+#         tri_3 = dt.get_point(Triangle[2])
+#         points = np.array([tri_1,tri_2,tri_3])
+#         x_tri = points[:,0]
+#         y_tri = points[:,1]
+#         z_tri = points[:,2]
+#         Xm = np.mean(x_tri)
+#         Ym = np.mean(y_tri)
+#         Zm = np.mean(z_tri)
+#         x_point = x_point0-Xm
+#         y_point = y_point0-Ym
+#         z_point = z_point0-Zm
+#         xyz_point = np.array([x_point,y_point,z_point]).reshape(-1,1).T
+#         x_tri = (x_tri-Xm).reshape(-1,1)
+#         y_tri = (y_tri-Ym).reshape(-1,1)
+#         z_tri = (z_tri-Zm).reshape(-1,1)
+#         M = np.concatenate((x_tri,y_tri,z_tri),axis=1)
+#         MtM = np.dot(M.T,M)
+#         e, v = np.linalg.eig(MtM)
+#         emax = np.argmax(e)
+#         emin = np.argmin(e)
+#         emid = 3-emax-emin
+#         v2 = np.zeros([3,3])
+#         v2[:,0] = v[:,emax]
+#         v2[:,1] = v[:,emid]
+#         v2[:,2] = v[:,emin]
+#         tri_rot = np.dot(M,v2)
+#         point_rot = np.dot(xyz_point,v2)
+#         distance = np.abs(point_rot[0,2])
+#         beta = np.zeros(3)
+#         for j in np.arange(0,3):
+#             vertex_rot = tri_rot[j,:]
+#             hor_dist = np.sqrt(np.square(vertex_rot[0]-point_rot[0,0])+np.square(vertex_rot[1]-point_rot[0,1]))
+#             beta[j] = np.rad2deg(np.arctan(distance/hor_dist))
+#         alpha = np.max(beta)
+#         if distance<0.012 and alpha<30: #distance<15 and alpha<20 for capital X #distance<0.013/0.017 and alpha <40 for small x
+#             dt.insert_one_pt(x_point0,y_point0,z_point0)
+#             remaining = np.delete(remaining,k,0)
+#             rgb_remaining = np.delete(rgb_remaining,k,0)
+#             #k = 0
+#             k = k+1
+#             check = 1
+#             
 #         else:
-#             a+=1
+#             k = k+1
+#     else:
+#         points_outside.append(k)
+#         k = k+1
+#         
+# ground_points = dt.all_vertices()
+# ground_points = np.asarray(ground_points)
+# xyz_ground = ground_points[1:,:]
+# 
+# 
+# 
+# DTM = dt.write_obj(r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\DTM.obj")
+# 
+# xx = x[points_outside]
+# yy = y[points_outside]
+# zz = z[points_outside]
+# rr = R[points_outside]
+# gg = G[points_outside]
+# bb = B[points_outside]
+# xyz_no_ground = np.vstack((xx,yy,zz)).T
+# rgb_no_ground = np.vstack((rr,gg,bb)).T
 # =============================================================================
-    
+
+#-- mycode_hw03.py
+#-- GEO1015.2019--hw03
+# Timo Bisschop (4297199)
+# Anastasios Vogiatzis (4747399)
+
+
+import math
+
+import json, sys
+
+import matplotlib.pyplot as plt
+# for reading LAS files
+from laspy.file import File
+import numpy as np
+
+# triangulation for ground filtering algorithm and TIN interpolation 
+import startin
+
+jparams = json.load(open(r"C:\Users\laptop\Google Drive\sos\DTM\assignement3\params.json"))
+
+thinning_factor = jparams["thinning-factor"]
+gf_distance = jparams["gf-distance"]
+gf_angle = jparams["gf-angle"]
+idw_power = jparams["idw-power"]
+idw_radius = jparams["idw-radius"]
+grid_cellsize = jparams["grid-cellsize"]
+input_las = jparams["input-las"]
+output_grid_idw = jparams["output-grid-idw"]
+output_grid_tin = jparams["output-grid-tin"]
+output_las = jparams["output-las"]
+#open input file
+inputfile = File(input_las,mode="r")
+Head = inputfile.header
+Offset = Head.offset
+Scale = Head.scale
+cloud = inputfile.points
+x = inputfile.x
+y = inputfile.y
+z = inputfile.z
+
+Original = np.vstack((x,y,z)).T
+
+#creating the initial triangulation
+gf_cellsize = jparams["gf-cellsize"]
+xmin = np.floor(np.min(x))
+ymin = np.floor(np.min(y))
+xmax = np.ceil(np.max(x))
+ymax = np.ceil(np.max(y))
+x_grid = np.arange(xmin,xmax,gf_cellsize)
+y_grid = np.arange(ymin,ymax,gf_cellsize)
+ground_points = []
+
+for i in np.arange(0,len(x_grid)-1):
+    for j in np.arange(0,len(y_grid)-1):  
+        points_cell = np.where((x > x_grid[i]) & (y>y_grid[j]) & (x<x_grid[i+1]) & (y<y_grid[j+1]))
+        if points_cell[0].shape[0]>0:
+            z_points = z[points_cell[0]]
+            point_lowest = points_cell[0][np.argmin(z_points)]
+            ground_points.append(point_lowest)
         
 x_lowest = x[ground_points]
 y_lowest = y[ground_points]
 z_lowest = z[ground_points]
-r_lowest = R[ground_points]
-g_lowest = G[ground_points]
-b_lowest = B[ground_points]
-rgb_ground = np.vstack((r_lowest,g_lowest,b_lowest)).T
-xyz_ground = np.vstack((x_lowest,y_lowest,z_lowest)).T
-# =============================================================================
-# v = pptk.viewer(xyz_ground,rgb_ground)
-# v.set(point_size = 0.1)
-# =============================================================================
+
+
 
 x = np.delete(x,ground_points)
 y = np.delete(y,ground_points)
 z = np.delete(z,ground_points)
-r = np.delete(R,ground_points)
-g = np.delete(G,ground_points)
-b = np.delete(B,ground_points)
+xyz_lowest = np.vstack((x_lowest,y_lowest,z_lowest)).T
 
-remaining = np.vstack((x,y,z)).T
-rgb_remaining = np.vstack((r,g,b)).T
+#insert 4 extra point to create a convex hull that includes all points in the dataset
+xyz_outside = np.array([[xmin-gf_cellsize,ymin-gf_cellsize,z_lowest[0]],[xmin-gf_cellsize,ymax+gf_cellsize,z_lowest[len(y_grid)-2]],[xmax+gf_cellsize,ymin-gf_cellsize,z_lowest[len(y_lowest)-(len(y_grid)-1)]],[xmax+gf_cellsize,ymax+gf_cellsize,z_lowest[len(y_lowest)-1]]])
+points_initial = np.concatenate((xyz_outside,xyz_lowest),axis=0)
+added = points_initial.shape[0]
 
 dt = startin.DT()
-dt.insert(xyz_ground)
+dt.insert(points_initial)
 
+#list of remaining points:
+remaining = np.concatenate((x.reshape(-1,1),y.reshape(-1,1),z.reshape(-1,1)),axis=1)
 points_outside = []
 k = 0
 check = 0
-#for i in np.arange(21,22):
-#and check = 0
-#append more points in the ground (classify them as ground)
+
 while remaining.shape[0]>k:
     print(remaining.shape[0]-k)
-    if check==1 and k==remaining.shape[0]:
-        k=0
-        check = 0
+
     
-    Triangle = dt.locate(remaining[k,0],remaining[k,1]) #returns the indices of the points of the triangle that the remaing point be placed
-    x_point0 = remaining[k,0] #the coordinates of the remaining point that included inside the triangle
+    Triangle = dt.locate(remaining[k,0],remaining[k,1])
+    x_point0 = remaining[k,0]
     y_point0 = remaining[k,1]
     z_point0 = remaining[k,2]
     
-    if len(Triangle)>0: #check if the point is outside of the dt area
-        tri_1 = dt.get_point(Triangle[0]) #the coordinates of the points of the triangle
+    if len(Triangle)>0:
+        tri_1 = dt.get_point(Triangle[0])
         tri_2 = dt.get_point(Triangle[1])
         tri_3 = dt.get_point(Triangle[2])
         points = np.array([tri_1,tri_2,tri_3])
@@ -230,12 +381,9 @@ while remaining.shape[0]>k:
             hor_dist = np.sqrt(np.square(vertex_rot[0]-point_rot[0,0])+np.square(vertex_rot[1]-point_rot[0,1]))
             beta[j] = np.rad2deg(np.arctan(distance/hor_dist))
         alpha = np.max(beta)
-        if distance<0.012 and alpha<30: #distance<15 and alpha<20 for capital X #distance<0.013/0.017 and alpha <40 for small x
+        if distance<gf_distance and alpha<gf_angle:
             dt.insert_one_pt(x_point0,y_point0,z_point0)
             remaining = np.delete(remaining,k,0)
-            rgb_remaining = np.delete(rgb_remaining,k,0)
-            #k = 0
-            k = k+1
             check = 1
             
         else:
@@ -243,23 +391,98 @@ while remaining.shape[0]>k:
     else:
         points_outside.append(k)
         k = k+1
-        
-ground_points = dt.all_vertices()
-ground_points = np.asarray(ground_points)
-xyz_ground = ground_points[1:,:]
+    if check==1 and k==remaining.shape[0]:
+        k=0
+        check = 0
+      
+vertices = dt.all_vertices()
+vertices = np.asarray(vertices)
+#delete all vertices with strange values 
+vertices = np.delete(vertices,0,0)
+vertices = np.delete(vertices,[4,5,119,122,127],0)
+#delete the corner points that were added:
+vertices = np.delete(vertices,[0,1,2,3],0)
+#adjust the indices of the triangles for the deleted vertices:
+triangles = np.asarray(dt.all_triangles())-10
+  
 
+#Create grid for interpolation:
+x_grid = np.arange(np.floor(np.min(vertices[:,0])),np.ceil(np.max(vertices[:,0])),grid_cellsize)
+y_grid = np.arange(np.floor(np.min(vertices[:,1])),np.ceil(np.max(vertices[:,1])),grid_cellsize)
+z = np.zeros([len(x_grid),len(y_grid)])
+radius = idw_radius
+for i in np.arange(0,len(x_grid)):
+    print(i)
+    for j in np.arange(0,len(y_grid)):
+        x = x_grid[i]
+        y = y_grid[j]
+        distances = np.sqrt(np.square(vertices[:,0]-x)+np.square(vertices[:,1]-y))
+        points_within = np.where(distances<radius)
+        if len(points_within[0])>0:
+#            if np.min(distances) < 0.001:
+#                z[i,j] = vertices[np.argmin(distances),2]
+#            else:
+            weights = 1/(distances[points_within]**idw_power)
+            z[i,j] = np.sum(weights*vertices[points_within,2])/np.sum(weights)
+        else:
+            z[i,j] = np.NaN
 
+z = np.flipud(z.T)
 
-DTM = dt.write_obj(r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\DTM.obj")
+ncols = z.shape[1]
+nrows = z.shape[0]
+xllcenter = x_grid[0]
+yllcenter = y_grid[0]
+cellsize = grid_cellsize
+nodata_value = -9999.999
+z[np.isnan(z)]=nodata_value
 
-xx = x[points_outside]
-yy = y[points_outside]
-zz = z[points_outside]
-rr = R[points_outside]
-gg = G[points_outside]
-bb = B[points_outside]
-xyz_no_ground = np.vstack((xx,yy,zz)).T
-rgb_no_ground = np.vstack((rr,gg,bb)).T
+H = 'NCOLS %d\rNROWS %d\rXLLCENTER %d\rYLLCENTER %d\rCELLSIZE %.3f\rNODATA_VALUE %.3f' % (ncols,nrows,xllcenter,yllcenter,cellsize,nodata_value)
+np.savetxt(output_grid_idw,z,fmt='%.3f',header=H)
+
+x_grid = np.arange(np.floor(np.min(vertices[:,0])),np.ceil(np.max(vertices[:,0])),grid_cellsize)
+y_grid = np.arange(np.floor(np.min(vertices[:,1])),np.ceil(np.max(vertices[:,1])),grid_cellsize)
+TIN = startin.DT()
+TIN.insert(vertices)
+z_TIN = np.zeros([len(x_grid),len(y_grid)])
+def tri_area(a,b,c):
+    s = (a + b + c) / 2
+    area = (s*(s-a)*(s-b)*(s-c)) ** 0.5
+    return area
+
+for i in np.arange(0,len(x_grid)):
+    print(i)
+    for j in np.arange(0,len(y_grid)):
+        x = x_grid[i]
+        y = y_grid[j]
+        triangle = TIN.locate(x,y)
+        if len(triangle)>0:
+            a_z = TIN.get_point(triangle[0])[2]
+            b_z = TIN.get_point(triangle[1])[2]
+            c_z = TIN.get_point(triangle[2])[2]
+            a_cor = np.array(TIN.get_point(triangle[0]))[0:2]
+            b_cor = np.array(TIN.get_point(triangle[1]))[0:2]
+            c_cor = np.array(TIN.get_point(triangle[2]))[0:2]
+            P = np.array([x,y])
+            L_1 = np.sqrt(np.sum(np.square(a_cor-b_cor)))
+            L_2 = np.sqrt(np.sum(np.square(a_cor-c_cor)))
+            L_3 = np.sqrt(np.sum(np.square(b_cor-c_cor)))
+            L_4 = np.sqrt(np.sum(np.square(P-a_cor)))
+            L_5 = np.sqrt(np.sum(np.square(P-b_cor)))
+            L_6 = np.sqrt(np.sum(np.square(P-c_cor)))
+            A_1 = tri_area(L_1,L_4,L_5)
+            A_2 = tri_area(L_2,L_4,L_6)
+            A_3 = tri_area(L_3,L_5,L_6)
+            A_tot = A_1+A_2+A_3
+            z_TIN[i,j] = (A_1*c_z+A_2*b_z+A_3*a_z)/A_tot
+        else:
+            z_TIN[i,j] = np.NaN
+
+z_TIN = np.flipud(z_TIN.T)
+z_TIN[np.isnan(z_TIN)]=nodata_value
+H = 'NCOLS %d\rNROWS %d\rXLLCENTER %d\rYLLCENTER %d\rCELLSIZE %d\rNODATA_VALUE %d' % (ncols,nrows,xllcenter,yllcenter,cellsize,nodata_value)
+np.savetxt(output_grid_tin,z_TIN,fmt='%.3f',header=H)
+
         
 #%% 
 # Nearest neighbors with normalized data. The confusion matrix return better results but the visualization was not so good

@@ -634,8 +634,77 @@ confusion_matrix(species,predictions_forest)
 
 yyyy_pred = rfc.predict(xx)
 v = pptk.viewer(xyz,yyyy_pred)
+v.set(point_size=0.01)
+
+#%%
+#keep only the broccoli by keeping the red points
+red_indices = np.where(yyyy_pred[:,0]==1)
+red_indices = np.reshape(red_indices,-1,1)
+only_broccoli = xyz[red_indices,:]
+rgb_broccoli = rgb[red_indices,:]
+v = pptk.viewer(only_broccoli,rgb_broccoli) 
+v.set(point_size=0.01)
+
+# voxelization 
+# https://github.com/daavoo/pyntcloud 
+# https://pyntcloud.readthedocs.io/en/latest/points.html
+# https://medium.com/@shakasom/how-to-convert-latitude-longtitude-columns-in-csv-to-geometry-column-using-python-4219d2106dea
+# https://github.com/mcoder2014/voxelization  !!!!!!!!!!!!!!!!!!
+from pyntcloud import PyntCloud
+import pandas as pd
+
+header = ['x','y','z']
+only_broccoli = pd.DataFrame(data=only_broccoli, columns=header , index=None)
+header_rgb = ['red','green','blue']
+rgb_broccoli = pd.DataFrame(data=rgb_broccoli, columns=header_rgb , index=None)
+
+XX = pd.DataFrame.join(only_broccoli, rgb_broccoli)
+
+XX.to_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\cloud.csv', index=False)
+#rgb_broccoli.to_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\rgb_cloud.csv', index=False)
+
+cloud = PyntCloud.from_file(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\cloud.csv')
+cloud.add_scalar_field("hsv")
+voxelgrid_id = cloud.add_structure("voxelgrid", n_x=200, n_y=200, n_z=100)
+new_cloud = cloud.get_sample("voxelgrid_nearest", voxelgrid_id=voxelgrid_id, as_PyntCloud=True)
+new_cloud.to_file(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv',index=None)
 
 
- 
+
+dt = startin.DT()
+
+dt.insert(only_broccoli)
+
+b = dt.write_obj(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\broccoli_tria.obj')
+
+# =============================================================================
+# import geopandas as gpd
+# 
+# gdf = gpd.GeoDataFrame(only_broccoli, geometry=gpd.points_from_xy(x=only_broccoli.X, y=only_broccoli.Y))
+# gdf.to_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\b_cloud.csv',index=False)
+# =============================================================================
 
 
+#clustering the points !!!
+# https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
+import pandas as pd
+from sklearn.cluster import DBSCAN
+import numpy as np
+import pptk
+data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv')
+data = np.asarray(data)
+
+clustering = DBSCAN(eps=0.4, min_samples=10).fit(data)
+labels = clustering.labels_
+
+v = pptk.viewer(data)
+R = np.zeros(len(labels))
+G = np.zeros(len(labels))
+B = np.zeros(len(labels))
+
+for i in range(len(labels)):
+    R[i] = labels[i]*10
+    B[i] = labels[i]*10
+    G[i] = labels[i]*10
+    
+rgb = np.vstack((R,G,B)).T

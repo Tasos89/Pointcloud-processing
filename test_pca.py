@@ -17,11 +17,10 @@ from sklearn.preprocessing import Normalizer
 
 #%%
 
+input
 input_folder = r'C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\35m' #35m Broccoli
-# =============================================================================
-# input_folder = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\AZ74_10m-0-1 - Cloud.las" #10m Broccoli
-# data_las = File(folder_10m, mode = 'r')
-# =============================================================================
+#input_folder = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\AZ74_10m-0-1 - Cloud.las" #10m Broccoli
+#data_las = File(input_folder, mode = 'r')
 
 las_files = []
 for root, dirs, files in os.walk(input_folder, topdown=True):
@@ -128,7 +127,7 @@ planarity = []
 scatter = []
 omnivariance = []
 anisotropy = []
-eigenentropy = []
+#eigenentropy = []
 change_curvature = []
 dif_elev = []
 mean_elev = []
@@ -166,8 +165,8 @@ for i in range(len(indices)):
     scatter.append(sc)
     anis = (e[0]-e[2])/e[0]
     anisotropy.append(anis)
-    ei = -(e[0]*math.log(e[0])+e[1]*math.log(e[1])+e[2]*math.log(e[2]))
-    eigenentropy.append(ei)
+    #ei = -(e[0]*math.log(e[0])+e[1]*math.log(e[1])+e[2]*math.log(e[2]))
+    #eigenentropy.append(ei)
     cha = e[2]/sum(e)
     change_curvature.append(cha)
     m_el = z.mean()
@@ -187,8 +186,8 @@ s = np.asarray(scatter)
 scat_n = (s -s.min()) / (s.max() - s.min())
 an = np.asarray(anisotropy)
 an_n = (an -an.min()) / (an.max() - an.min())
-eig = np.asarray(eigenentropy)
-eig_n = (eig -eig.min()) / (eig.max() - eig.min())
+#eig = np.asarray(eigenentropy)
+#eig_n = (eig -eig.min()) / (eig.max() - eig.min())
 ch = np.asarray(change_curvature)
 ch_cur_n = (ch -ch.min()) / (ch.max() - ch.min())
 m_e = np.asarray(mean_elev)
@@ -197,15 +196,17 @@ d_e = np.asarray(dif_elev)
 dif_elev_n = (d_e -d_e.min()) / (d_e.max() - d_e.min())
 
 #standardization is used for PCA? preprocessing.StandardScaler does not work for me, hence manually..
-omn_std = (omnivariance-omnivariance.mean())/omnivariance.std()
-lin_std = (l-l.mean())/l.std()
-plan_std = (p-p.mean())/p.std()
-scat_std = (s-s.mean())/s.std()
-an_std = (an-an.mean())/an.std()
-eig_std = (eig-eig.mean())/eig.std()
-ch_cur_std = (ch-ch.mean())/ch.std()
-mean_el_std = (m_e-m_e.mean())/m_e.std()
-dif_elev_std = (d_e-d_e.mean())/d_e.std()
+# =============================================================================
+# omn_std = (omnivariance-omnivariance.mean())/omnivariance.std()
+# lin_std = (l-l.mean())/l.std()
+# plan_std = (p-p.mean())/p.std()
+# scat_std = (s-s.mean())/s.std()
+# an_std = (an-an.mean())/an.std()
+# eig_std = (eig-eig.mean())/eig.std()
+# ch_cur_std = (ch-ch.mean())/ch.std()
+# mean_el_std = (m_e-m_e.mean())/m_e.std()
+# dif_elev_std = (d_e-d_e.mean())/d_e.std()
+# =============================================================================
 
 #visualization
 # =============================================================================
@@ -270,18 +271,20 @@ features = np.vstack((omn_n, dif_elev_n, L, a, b)).T #Lab
 
 
 #data = np.concatenate((features),axis=0)
-scaler = MinMaxScaler(feature_range=[0,1])
-data_rescaled = scaler.fit_transform(features)
-pca = PCA().fit(data_rescaled)
-pca = PCA().fit(features)
+# =============================================================================
+# scaler = MinMaxScaler(feature_range=[0,1])
+# data_rescaled = scaler.fit_transform(features)
+# pca = PCA().fit(data_rescaled)
+# =============================================================================
 
+pca = PCA().fit(features)
 plt.figure()
 plt.plot(np.cumsum(pca.explained_variance_ratio_))
 plt.xlabel('Number of Features')
 plt.ylabel('Variance (%)')
 plt.title('Subjective Choose of Features')
 plt.show()
-plt.savefig('pca.png')
+#plt.savefig('pca.png')
 
 # we already have normalized data hence perhaps the minmaxscaler is redundant 
 pca1 = PCA().fit(features)
