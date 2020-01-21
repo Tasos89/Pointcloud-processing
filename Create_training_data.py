@@ -47,7 +47,7 @@ for root, dirs, files in os.walk(folder, topdown=True):
 
 las_list = []
 for file in las_files[:5]:
-    data_las = File(file, mode='r') #39 has big differences
+    data_las = File(file, mode='r')
     xyz = np.vstack([data_las.x, data_las.y, data_las.z]).transpose()
     las_list.append(xyz)
 
