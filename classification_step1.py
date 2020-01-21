@@ -1,18 +1,13 @@
-#################https://towardsdatascience.com/point-cloud-data-simple-approach-f3855fdc08f5    #############
-#PCA model
-#%% 
 # import packages 
 import os
 import pptk
 import numpy as np
 from laspy.file import File
-import math
-import numba
-from numba import jit
 from skimage.color import rgb2lab
-from sklearn.neighbors import NearestNeighbors #import NearestNeigbhors package
+from sklearn.neighbors import NearestNeighbors 
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import MinMaxScaler
 
 #%%
 
@@ -56,15 +51,6 @@ xn = (x - x.min()) / (x.max() - x.min())
 yn = (y - y.min()) / (y.max() - y.min())
 zn = (z - z.min()) / (z.max() - z.min())
 xyz_nn = np.vstack([xn,yn,zn]).T
-
-# Standarlize the data
-median = np.median(a=xyz,axis=0)
-std = np.std(a=xyz,axis=0)
-x_std = (x - median[0])/std[0]
-y_std = (y - median[1])/std[1]
-z_std = (z - median[2])/std[2]
-xyz_std = np.vstack([x_std,y_std,z_std]).T
-
 
 # from BGR to Lab # https://gist.github.com/bikz05/6fd21c812ef6ebac66e1
 # The results using Lab instead of RGB was not so good, hence changing the color space didn't work for early crop data
@@ -121,12 +107,6 @@ xyz_std = np.vstack([x_std,y_std,z_std]).T
 nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_nn) #['auto', 'ball_tree', 'kd_tree', 'brute']
 distances, indices = nbrs.kneighbors(xyz_nn) #the indices of the nearest neighbors 
 
-# Nearest neigbors with standarlized data
-
-# =============================================================================
-# nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_std) #['auto', 'ball_tree', 'kd_tree', 'brute']
-# distances, indices = nbrs.kneighbors(xyz_std) #the indices of the nearest neighbors 
-# =============================================================================
 
 #%% 
 # extraction of geometrical features among the nearest neighbors 
@@ -137,7 +117,6 @@ planarity = []
 scatter = []
 omnivariance = []
 anisotropy = []
-#eigenentropy = []
 change_curvature = []
 dif_elev = []
 mean_elev = []
@@ -168,8 +147,6 @@ for i in range(len(indices)):
     scatter.append(sc)
     anis = (e[0]-e[2])/e[0]
     anisotropy.append(anis)
-    #ei = -(e[0]*math.log(e[0])+e[1]*math.log(e[1])+e[2]*math.log(e[2]))
-    #eigenentropy.append(ei)
     cha = e[2]/sum(e)
     change_curvature.append(cha)
     m_el = z.mean()
@@ -189,8 +166,6 @@ s = np.asarray(scatter)
 scat_n = (s -s.min()) / (s.max() - s.min())
 an = np.asarray(anisotropy)
 an_n = (an -an.min()) / (an.max() - an.min())
-#eig = np.asarray(eigenentropy)
-#eig_n = (eig -eig.min()) / (eig.max() - eig.min())
 ch = np.asarray(change_curvature)
 ch_cur_n = (ch -ch.min()) / (ch.max() - ch.min())
 m_e = np.asarray(mean_elev)
@@ -201,69 +176,45 @@ dif_elev_n = (d_e -d_e.min()) / (d_e.max() - d_e.min())
 
 #visualization
 # =============================================================================
-# v = pptk.viewer(xyz,lin_std)
+# v = pptk.viewer(xyz,lin_n)
 # v.set(point_size=0.02)
-# v.capture('Linearity.png')
 # 
-# v = pptk.viewer(xyz,plan_std)
-# v.set(point_size=7)
-# v.capture('Planarity.png')
+# v = pptk.viewer(xyz,plan_n)
+# v.set(point_size=0.02)
 # 
-# v = pptk.viewer(xyz,scat_std)
-# v.set(point_size=7)
-# v.capture('Scattering.png')
+# v = pptk.viewer(xyz,scat_n)
+# v.set(point_size=0.02)
 # 
-# v = pptk.viewer(xyz,an_std)
-# v.set(point_size=7)
-# v.capture('Anisotropy.png')
+# v = pptk.viewer(xyz,an_n)
+# v.set(point_size=0.02)
 # 
-# v = pptk.viewer(xyz,eig_std)
-# v.set(point_size=10)
-# v.capture('Eigenotropy.png')
+# v = pptk.viewer(xyz,ch_cur_n)
+# v.set(point_size=0.02)
 # 
+# v = pptk.viewer(xyz,mean_el_n)
+# v.set(point_size=0.02)
 # 
-# v = pptk.viewer(xyz,ch_cur_std)
-# v.set(point_size=7)
-# v.capture('Change_of_Curvature.png')
+# v = pptk.viewer(xyz,dif_elev_n)
+# v.set(point_size=0.02)
 # 
-# v = pptk.viewer(xyz,mean_el_std)
-# v.set(point_size=7)
-# v.capture('Mean_elevation.png')
-# 
-# v = pptk.viewer(xyz,dif_elev_std)
-# v.set(point_size=7)
-# v.capture('Elevation_Difference.png')
-# 
-# v = pptk.viewer(xyz,omn_std)
-# v.set(point_size=7)
-# v.capture('Omnivariance.png')
+# v = pptk.viewer(xyz,omn_n)
+# v.set(point_size=0.02)
 # =============================================================================
 
-#%% lecture 7 decession trees and pca (geoprocessing analysis)
+# features chooce
+if 'Lab' in locals():
+    features = np.vstack((omn_n, dif_elev_n, L, a, b)).T #Lab
+else:
+    features = np.vstack((omn_n, dif_elev_n, R, G, B)).T #rgb
+
+#%% PCA
 # pca for the geometrical features to define the most important features with minmaxscaler features
 # https://www.visiondummy.com/2014/05/feature-extraction-using-pca/
 # https://chrisalbon.com/machine_learning/feature_engineering/feature_extraction_with_pca/ 
 # https://towardsdatascience.com/an-approach-to-choosing-the-number-of-components-in-a-principal-component-analysis-pca-3b9f3d6e73fe
 
-#features = np.vstack((omn_std, lin_std, plan_std, scat_std, an_std, eig_std, ch_cur_std, mean_el_std, dif_elev_std, r_std, g_std, b_std)).T
-#features = np.vstack((omn_n, lin_n, plan_n, scat_n, an_n, eig_n, ch_cur_n, mean_el_n, dif_elev_n, r_n, g_n, b_n)).T #normalize
-#features = np.vstack((omn_n, lin_n, plan_n, scat_n, an_n, eig_n, ch_cur_n, mean_el_n, dif_elev_n, L, a, b)).T #normalize
-features = np.vstack((omn_n, lin_n, plan_n, scat_n, an_n, ch_cur_n, mean_el_n, dif_elev_n, R, G, B)).T
-features = np.vstack((omn_n, dif_elev_n, R, G, B)).T # till now the best combination of features!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-features = np.vstack((omn_n, dif_elev_n, L, a, b)).T #Lab
-
-
-
-
-
-
-
-#data = np.concatenate((features),axis=0)
-# =============================================================================
-# scaler = MinMaxScaler(feature_range=[0,1])
-# data_rescaled = scaler.fit_transform(features)
-# pca = PCA().fit(data_rescaled)
-# =============================================================================
+#features = np.vstack((omn_n, lin_n, plan_n, scat_n, an_n, ch_cur_n, mean_el_n, dif_elev_n, L, a, b)).T #Lab
+#features = np.vstack((omn_n, lin_n, plan_n, scat_n, an_n, ch_cur_n, mean_el_n, dif_elev_n, R, G, B)).T #rgb
 
 pca = PCA().fit(features)
 plt.figure()
@@ -272,46 +223,7 @@ plt.xlabel('Number of Features')
 plt.ylabel('Variance (%)')
 plt.title('Subjective Choose of Features')
 plt.show()
-#plt.savefig('pca.png')
 
-# we already have normalized data hence perhaps the minmaxscaler is redundant 
-pca1 = PCA().fit(features)
-plt.figure()
-plt.plot(np.cumsum(pca2.explained_variance_ratio_))
-plt.xlabel('Number of Features')
-plt.ylabel('Variance (%)')
-plt.title('After the redundancy')
-plt.show()
-plt.savefig('After_pca.png')
-
-#hence we can keep 5 attributes/features that have the variance of almost all the data ~100%
-pca2 = PCA(n_components=5)
-features_new = pca2.fit_transform(features)
-
-
-#%%
-#pca2with standarlized data
-# https://chrisalbon.com/machine_learning/feature_engineering/feature_extraction_with_pca/
-# https://medium.com/apprentice-journal/pca-application-in-machine-learning-4827c07a61db
-# https://towardsdatascience.com/principal-component-analysis-for-dimensionality-reduction-115a3d157bad
-
-from sklearn import decomposition, datasets
-from sklearn.preprocessing import StandardScaler
-features = np.vstack((omn_std, lin_std, plan_std, scat_std, an_std, eig_std, ch_cur_std, mean_el_std, dif_elev_std, r_std, g_std, b_std)).T
-features = np.asarray(features)
-sc = StandardScaler()
-#fit the scaler to the features and transform
-features_std = sc.fit_transform(features)
-#create a pca object with the 8 components as parameter
-pca = decomposition.PCA(n_components=5)
-#fit the PCA and transform the data
-features_std_pca = pca.fit_transform(features_std)
-features_std_pca.shape
-
-
-plt.figure()
-plt.plot(np.cumsum(pca.explained_variance_ratio_))
-plt.xlabel('Number of Features')
-plt.ylabel('Variance (%)')
-plt.title('Subjective Choose of Features')
-plt.show()
+# Hence we can keep 5 attributes/features that have the variance of almost all the data ~100%
+pca1 = PCA(n_components=5)
+features_new = pca1.fit_transform(features)
