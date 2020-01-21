@@ -519,6 +519,8 @@ b = dt.write_obj(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\br
 #%%     clustering the points !!!
 # https://scikit-learn.org/stable/modules/generated/sklearn.cluster.DBSCAN.html
 # https://en.wikipedia.org/wiki/DBSCAN
+# https://en.wikipedia.org/wiki/Silhouette_(clustering)
+# for the evaluation of the quality of the epsi value
 
 data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv')
 data = np.asarray(data)
