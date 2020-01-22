@@ -12,6 +12,7 @@ from sklearn.ensemble import RandomForestClassifier
 from pyntcloud import PyntCloud
 import startin
 from sklearn.cluster import DBSCAN
+import sklearn
 
 #%% broccoli label=1
 
@@ -491,7 +492,7 @@ rgb_broccoli = pd.DataFrame(data=rgb_broccoli, columns=header_rgb , index=None)
 
 XX = pd.DataFrame.join(only_broccoli, rgb_broccoli)
 
-XX.to_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\cloud.csv', index=False)
+XX.to_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\dense_cloud.csv', index=False)
 #rgb_broccoli.to_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\rgb_cloud.csv', index=False)
 
 cloud = PyntCloud.from_file(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\cloud.csv')
@@ -521,8 +522,12 @@ b = dt.write_obj(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\br
 # https://en.wikipedia.org/wiki/DBSCAN
 # https://en.wikipedia.org/wiki/Silhouette_(clustering)
 # for the evaluation of the quality of the epsi value
+# https://towardsdatascience.com/introduction-to-image-segmentation-with-k-means-clustering-83fd0a9e2fc3
+# https://www.curiousily.com/posts/color-palette-extraction-with-k-means-clustering/
 
 data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv')
+#data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\dense_cloud.csv')
+
 data = np.asarray(data)
 x = np.array(data[:,0])
 y = np.array(data[:,1])
@@ -533,32 +538,21 @@ yn = (y - y.min()) / (y.max() - y.min())
 zn = (z - z.min()) / (z.max() - z.min())
 xyz_nn = np.vstack([xn,yn,zn]).T
 
-nbrs = NearestNeighbors(n_neighbors = 4, algorithm = 'auto').fit(data) #['auto', 'ball_tree', 'kd_tree', 'brute']
-distances, indices = nbrs.kneighbors(data) #the indices of the nearest neighbors 
+nbrs = NearestNeighbors(n_neighbors = 5, algorithm = 'kd_tree').fit(xyz_nn) #['auto', 'ball_tree', 'kd_tree', 'brute']
+distances, indices = nbrs.kneighbors(xyz_nn) #the indices of the nearest neighbors 
 
-import sklearn
-n=10
-scores = np.zeros(n)
-epslist = np.linspace(0.03,0.04,n)
-for i in range(n):
-    print(i)
-    epsi = epslist[i]
-    
-    clustering = DBSCAN(eps=epsi, min_samples=4).fit(xyz_nn)
-    labels = clustering.labels_
-    
-    scores[i] = sklearn.metrics.silhouette_score(xyz_nn, labels, metric='euclidean')
-    
-#clustering = DBSCAN(eps=epsi, min_samples=4).fit(data)
-#labels = clustering.labels_
-
-#nbrs = NearestNeighbors(n_neighbors = 4, algorithm = 'auto').fit(xyz_nn) #['auto', 'ball_tree', 'kd_tree', 'brute']
-#distances, indices = nbrs.kneighbors(xyz_nn) #the indices of the nearest neighbors 
-
-clustering = DBSCAN(eps=sadlfkjads, min_samples=4).fit(xyz_nn)
+clustering = DBSCAN(eps=0.0255, min_samples=8).fit(xyz_nn) #for the dense cloud (eps = 0.04) returens 15 clusters # for non-dense (eps=0.018)/0.015
 labels = clustering.labels_
 
+v = pptk.viewer(data,labels)
+v.set(point_size=0.02)
 
+colors = [int(i % 23) for i in labels]
+
+v = pptk.viewer(data,colors)
+v.set(point_size=0.02)
+
+#
 #Rlist = np.random.randint(100,size=np.max(labels)+2)/100
 #Glist = np.random.randint(100,size=np.max(labels)+2)/100
 #Blist = np.random.randint(100,size=np.max(labels)+2)/100
@@ -570,8 +564,65 @@ labels = clustering.labels_
 #    rgb[i,0]=Rlist[labels[ind]]
 #    rgb[i,1]=Glist[labels[ind]]
 #    rgb[i,2]=Blist[labels[ind]]
-    
+#
+#v = pptk.viewer(data,rgb)
+#v.set(point_size=0.02)
 
+
+n=10
+scores = np.zeros(n)
+epslist = np.linspace(0.02,0.026,n)
+for i in range(n):
+    print(i)
+    epsi = epslist[i]
+    
+    clustering = DBSCAN(eps=epsi, min_samples=4).fit(xyz_nn)
+    labels = clustering.labels_
+    scores[i] = sklearn.metrics.silhouette_score(xyz_nn, labels, metric='euclidean')
+#evaluate the eps looking at the histogram
+plt.hist(scores)
+    
+#clustering = DBSCAN(eps=epsi, min_samples=4).fit(data)
+#labels = clustering.labels_
+
+#nbrs = NearestNeighbors(n_neighbors = 4, algorithm = 'auto').fit(xyz_nn) #['auto', 'ball_tree', 'kd_tree', 'brute']
+#distances, indices = nbrs.kneighbors(xyz_nn) #the indices of the nearest neighbors 
+
+clustering = DBSCAN(eps=0.04, min_samples=4).fit(xyz_nn)
+labels = clustering.labels_
+
+
+
+nbrs = NearestNeighbors(n_neighbors = 10, algorithm = 'auto').fit(xyz_nn) #['auto', 'ball_tree', 'kd_tree', 'brute']
+distances, indices = nbrs.kneighbors(xyz_nn) #the indices of the nearest neighbors 
+
+clustering = DBSCAN(eps=0.028, min_samples=10).fit(xyz_nn) #for the dense cloud (eps = 0.04) returens 15 clusters # for non-dense (eps=0.026)/0.015
+labels = clustering.labels_
+
+Rlist = np.random.randint(100,size=np.max(labels)+2)/100
+Glist = np.random.randint(100,size=np.max(labels)+2)/100
+Blist = np.random.randint(100,size=np.max(labels)+2)/100
+
+rgb = np.zeros(data.shape)
+
+for i in range(len(data)):
+    ind = labels[i]+1
+    rgb[i,0]=Rlist[labels[ind]]
+    rgb[i,1]=Glist[labels[ind]]
+    rgb[i,2]=Blist[labels[ind]]
+    
+v = pptk.viewer(data,rgb)
+
+# implement asign color using the indices from nearest neighbors. It doen not work (overwrites all the points)  
+# in case we manage to not traverse the points again and again...  
+    
+color = np.zeros(data.shape)
+for i in range(len(indices)):
+    ind = indices[i,:]
+    color[ind] = np.random.randint(0,255,size=3)/255
+    
+v = pptk.viewer(data,labels)
+v.set(point_size=0.02)
 
 
 

@@ -12,7 +12,7 @@ from sklearn.preprocessing import MinMaxScaler
 #%%
 
 #specifiy the folder/file for the .las files. 
-path = r'C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\35m'
+path = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\AZ74_10m-0-1 - Cloud.las"
 if path.endswith('las'):
     data_las = File(path, mode = 'r')
     #extract the coordinates of the .las file
