@@ -4,7 +4,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.cluster import DBSCAN
-from sklearn import metrics
+#from sklearn import metrics
 from sklearn.datasets import make_blobs
 
 data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv')
@@ -35,7 +35,6 @@ n_noise_ = list(labels).count(-1)
 # Plot result
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import cv2
 fig = plt.figure()
 ax = Axes3D(fig)
 ax.scatter(data[:,0],data[:,1],data[:,2])
@@ -65,23 +64,20 @@ plt.show()
 # How to obtain the optimal number of clusters
 # https://blog.cambridgespark.com/how-to-determine-the-optimal-number-of-clusters-for-k-means-clustering-14f27070048f
 # https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_silhouette_analysis.html
-import sklearn
 from sklearn.cluster import KMeans
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-import cv2
 import pandas as pd
 import pptk
-import sklearn
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
 from kneebow.rotor import Rotor
 
 
 
-data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv')
-#data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\dense_cloud.csv')
+#data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv')
+data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\dense_cloud.csv')
 
 data = np.asarray(data)
 x = np.array(data[:,0])
@@ -121,34 +117,37 @@ labels = clustering.labels_
 colors = [int(i % 23) for i in labels]
 
 v = pptk.viewer(data,colors)
-v.set(point_size=0.02)
+v.set(point_size=0.01)
 
 
 
 #2nd evaluation
-n=10
-scores = np.zeros(n)
-epslist = np.linspace(0.024,0.02,n)
-for i in range(n):
-    print(i)
-    epsi = epslist[i]
-    
-    clustering = DBSCAN(eps=epsi, min_samples=5).fit(xyz_nn)
-    labels = clustering.labels_
-    scores[i] = sklearn.metrics.silhouette_score(xyz_nn, labels, metric='euclidean')
-#evaluate the eps looking at the histogram
-#plt.plot(epslist,scores)
-
-ind_max = np.argmax(scores)
-eps = epslist[ind_max] #the optimal distance after Shilouette evaluetion
-
-clustering = DBSCAN(eps, min_samples=5).fit(xyz_nn) #the number of samples is D+1=4
-labels = clustering.labels_
-
-colors = [int(i % 23) for i in labels]
-
-v = pptk.viewer(data,colors)
-v.set(point_size=0.02)
+# =============================================================================
+# n=10
+# scores = np.zeros(n)
+# #epslist = np.linspace(0.024,0.02,n)
+# epslist = np.linspace(eps+eps/10,eps-eps/10,n)
+# for i in range(n):
+#     print(i)
+#     epsi = epslist[i]
+#     
+#     clustering = DBSCAN(eps=epsi, min_samples=5).fit(xyz_nn)
+#     labels = clustering.labels_
+#     scores[i] = sklearn.metrics.silhouette_score(xyz_nn, labels, metric='euclidean')
+# #evaluate the eps looking at the histogram
+# #plt.plot(epslist,scores)
+# 
+# ind_max = np.argmax(scores)
+# eps = epslist[ind_max] #the optimal distance after Shilouette evaluetion
+# 
+# clustering = DBSCAN(eps, min_samples=5).fit(xyz_nn) #the number of samples is D+1=4
+# labels = clustering.labels_
+# 
+# colors = [int(i % 23) for i in labels]
+# 
+# v = pptk.viewer(data,colors)
+# v.set(point_size=0.02)
+# =============================================================================
 
 #%% K-Means Shilouette evaluation (Works)
 # https://towardsdatascience.com/clustering-metrics-better-than-the-elbow-method-6926e1f723a6
@@ -258,3 +257,31 @@ for n_clusters in range_n_clusters:
 
 plt.show()
 
+
+#%% https://github.com/davidcaron/pclpy/issues/9
+# it works for the no_dense point cloud
+# region growing
+import math
+import pclpy
+from pclpy import pcl
+
+pc = pclpy.io.las.read( r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\no_dense_cloud.las", "PointXYZRGBA")
+rg = pcl.segmentation.RegionGrowing.PointXYZRGBA_Normal()
+rg.setInputCloud(pc)
+normals_estimation = pcl.features.NormalEstimationOMP.PointXYZRGBA_Normal()
+normals_estimation.setInputCloud(pc)
+normals = pcl.PointCloud.Normal()
+normals_estimation.setRadiusSearch(0.01)  #no_dense = 0.01
+normals_estimation.compute(normals)
+rg.setInputNormals(normals)
+
+rg.setMaxClusterSize(700) #no_dense 700
+rg.setMinClusterSize(8) #no_dense 8
+rg.setNumberOfNeighbours(4) #no_dense 4
+rg.setSmoothnessThreshold(5 / 180 * math.pi)
+rg.setCurvatureThreshold(30)
+rg.setResidualThreshold(10)
+clusters = pcl.vectors.PointIndices()
+rg.extract(clusters)
+cloud = rg.getColoredCloud()
+pclpy.io.las.write(cloud, r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing/region_growing_no_dense.las")

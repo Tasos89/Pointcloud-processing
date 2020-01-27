@@ -501,6 +501,10 @@ voxelgrid_id = cloud.add_structure("voxelgrid", n_x=200, n_y=200, n_z=100)
 new_cloud = cloud.get_sample("voxelgrid_nearest", voxelgrid_id=voxelgrid_id, as_PyntCloud=True)
 new_cloud.to_file(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv',index=None)
 
+#write .las file
+outFile1 = File(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\filtered.las', mode = "w")
+outFile1.points = 
+outFile1.close()
 
 
 dt = startin.DT()
