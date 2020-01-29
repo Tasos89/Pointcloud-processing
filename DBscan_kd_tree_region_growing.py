@@ -76,8 +76,8 @@ from kneebow.rotor import Rotor
 
 
 
-#data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv')
-data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\dense_cloud.csv')
+data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv')
+#data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\dense_cloud.csv')
 
 data = np.asarray(data)
 x = np.array(data[:,0])
@@ -111,7 +111,7 @@ del x,y,xy
 #ind_maximum_curv = np.argmax(np.gradient(distances,3))
 #eps = distances[ind_maximum_curv]
 
-clustering = DBSCAN(eps, min_samples=5).fit(xyz_nn) #the number of samples is D+1=4
+clustering = DBSCAN( algorithm = 'kd_tree',eps=eps, min_samples=5).fit(xyz_nn) #the number of samples is D+1=4
 labels = clustering.labels_
 
 colors = [int(i % 23) for i in labels]
@@ -119,6 +119,21 @@ colors = [int(i % 23) for i in labels]
 v = pptk.viewer(data,colors)
 v.set(point_size=0.01)
 
+# =============================================================================
+# indices = []
+# for i in range(np.max(labels)):
+#     indices.append(np.where(labels==i))
+# =============================================================================
+    
+    
+indices = [np.where(labels==i) for i in range(np.max(labels))]
+
+xyz_5 = data[indices[5]]
+v = pptk.viewer(xyz_5)
+v.set(point_size=0.002)
+# find the concave hull of each cluster-broccoli
+#https://gist.github.com/dwyerk/10561690
+# https://plot.ly/python/alpha-shapes/
 
 
 #2nd evaluation

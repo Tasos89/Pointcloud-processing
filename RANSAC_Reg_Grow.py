@@ -12,6 +12,9 @@
 import math
 import pclpy
 from pclpy import pcl
+import numpy as np
+import pptk
+import pandas as pd
 
 pc = pclpy.io.las.read( r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\no_dense_cloud.las", "PointXYZRGBA")
 rg = pcl.segmentation.RegionGrowing.PointXYZRGBA_Normal()
@@ -27,9 +30,18 @@ rg.setMaxClusterSize(700) #no_dense 700
 rg.setMinClusterSize(8) #no_dense 8
 rg.setNumberOfNeighbours(4) #no_dense 4
 rg.setSmoothnessThreshold(5 / 180 * math.pi)
-rg.setCurvatureThreshold(30)
+rg.setCurvatureThreshold(20)
 rg.setResidualThreshold(10)
 clusters = pcl.vectors.PointIndices()
 rg.extract(clusters)
 cloud = rg.getColoredCloud()
+cloud.show()
 pclpy.io.las.write(cloud, r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing/region_growing_no_dense.las")
+
+xyz = np.array(cloud.xyz)
+rgb = np.array(cloud.rgb)
+#v = pptk.viewer(xyz,rgb)
+#v.set(point_size=0.02)
+
+for i in clusters:
+    cloud[i]
