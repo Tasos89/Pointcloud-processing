@@ -114,7 +114,7 @@ del x,y,xy
 clustering = DBSCAN( algorithm = 'kd_tree',eps=eps, min_samples=5).fit(xyz_nn) #the number of samples is D+1=4
 labels = clustering.labels_
 
-colors = [int(i % 23) for i in labels]
+colors = [int(i % 23) for i in labels] # 554 labels to 23 distinguished colors
 
 v = pptk.viewer(data,colors)
 v.set(point_size=0.01)
@@ -128,11 +128,26 @@ v.set(point_size=0.01)
     
 indices = [np.where(labels==i) for i in range(np.max(labels))]
 
-xyz_5 = data[indices[5]]
+xyz_5 = data[indices[6]]
 v = pptk.viewer(xyz_5)
 v.set(point_size=0.002)
+
+xyz_100 = data[indices[100]]
+v = pptk.viewer(xyz_100)
+v.set(point_size=0.002)
+
+ind = [np.where(np.sum(color==i)>12) for i in range(np.max(labels))] 
+# =============================================================================
+# =============================================================================
+# # import startin
+# # dt = startin.DT()
+# # dt.insert(data)
+# # dt.write_obj(r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\triangle_data.obj")
+# =============================================================================
+# =============================================================================
+
 # find the concave hull of each cluster-broccoli
-#https://gist.github.com/dwyerk/10561690
+# https://gist.github.com/dwyerk/10561690
 # https://plot.ly/python/alpha-shapes/
 
 
