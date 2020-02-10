@@ -1,4 +1,4 @@
-#%% DBscanner
+#%% DBscan
 # I nice implementation of DBscaner 
 # https://stackoverflow.com/questions/53076159/dbscan-silhouette-coefficients-does-this-for-loop-work
 import numpy as np
@@ -60,11 +60,10 @@ for k, col in zip(unique_labels, colors):
 plt.title('Estimated number of clusters: %d' % n_clusters_)
 plt.show()
 
-#%% DBSCANE
+#%% DBSCAN
 # How to obtain the optimal number of clusters
 # https://blog.cambridgespark.com/how-to-determine-the-optimal-number-of-clusters-for-k-means-clustering-14f27070048f
 # https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_silhouette_analysis.html
-from sklearn.cluster import KMeans
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -125,7 +124,7 @@ v.set(point_size=0.01)
 #     indices.append(np.where(labels==i))
 # =============================================================================
     
-    
+## Test of one random cluster ##    
 indices = [np.where(labels==i) for i in range(np.max(labels))]
 
 xyz_5 = data[indices[6]]
@@ -136,7 +135,14 @@ xyz_100 = data[indices[100]]
 v = pptk.viewer(xyz_100)
 v.set(point_size=0.002)
 
-ind = [np.where(np.sum(color==i)>12) for i in range(np.max(labels))] 
+ind = [np.where(np.sum(colors==i)>12) for i in range(np.max(labels))] 
+
+# https://shapely.readthedocs.io/en/latest/project.html
+# https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.ConvexHull.html    ###############
+# https://stackoverflow.com/questions/24733185/volume-of-convex-hull-with-qhull-from-scipy
+# scipy delaunay
+#is the way to extract the pogol bounding box from a cluster of points
+# a different way is to to find the min max etc
 # =============================================================================
 # =============================================================================
 # # import startin
@@ -151,33 +157,32 @@ ind = [np.where(np.sum(color==i)>12) for i in range(np.max(labels))]
 # https://plot.ly/python/alpha-shapes/
 
 
-#2nd evaluation
-# =============================================================================
-# n=10
-# scores = np.zeros(n)
-# #epslist = np.linspace(0.024,0.02,n)
-# epslist = np.linspace(eps+eps/10,eps-eps/10,n)
-# for i in range(n):
-#     print(i)
-#     epsi = epslist[i]
-#     
-#     clustering = DBSCAN(eps=epsi, min_samples=5).fit(xyz_nn)
-#     labels = clustering.labels_
-#     scores[i] = sklearn.metrics.silhouette_score(xyz_nn, labels, metric='euclidean')
-# #evaluate the eps looking at the histogram
-# #plt.plot(epslist,scores)
-# 
-# ind_max = np.argmax(scores)
-# eps = epslist[ind_max] #the optimal distance after Shilouette evaluetion
-# 
-# clustering = DBSCAN(eps, min_samples=5).fit(xyz_nn) #the number of samples is D+1=4
-# labels = clustering.labels_
-# 
-# colors = [int(i % 23) for i in labels]
-# 
-# v = pptk.viewer(data,colors)
-# v.set(point_size=0.02)
-# =============================================================================
+### 2nd method to calculate a suitable value for epsilon ####
+# Its does not perform well
+import sklearn
+n=10
+scores = np.zeros(n)
+epslist = np.linspace(eps+eps/10,eps-eps/10,n)
+for i in range(n):
+    print(i)
+    epsi = epslist[i]
+    
+    clustering = DBSCAN(eps=epsi, min_samples=5).fit(xyz_nn)
+    labels = clustering.labels_
+    scores[i] = sklearn.metrics.silhouette_score(xyz_nn, labels, metric='euclidean')
+#evaluate the eps looking at the histogram
+#plt.plot(epslist,scores)
+
+ind_max = np.argmax(scores)
+eps = epslist[ind_max] #the optimal distance after Shilouette evaluetion
+
+clustering = DBSCAN(eps, min_samples=5).fit(xyz_nn) #the number of samples is D+1=4
+labels = clustering.labels_
+
+colors = [int(i % 23) for i in labels]
+
+v = pptk.viewer(data,colors)
+v.set(point_size=0.01)
 
 #%% K-Means Shilouette evaluation (Works)
 # https://towardsdatascience.com/clustering-metrics-better-than-the-elbow-method-6926e1f723a6
@@ -288,12 +293,16 @@ for n_clusters in range_n_clusters:
 plt.show()
 
 
-#%% https://github.com/davidcaron/pclpy/issues/9
+#%% Region growing segmentation 
+# https://github.com/davidcaron/pclpy/issues/9
 # it works for the no_dense point cloud
 # region growing
 import math
 import pclpy
 from pclpy import pcl
+from laspy.file import File
+import pptk
+import numpy as np
 
 pc = pclpy.io.las.read( r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\no_dense_cloud.las", "PointXYZRGBA")
 rg = pcl.segmentation.RegionGrowing.PointXYZRGBA_Normal()
@@ -315,3 +324,15 @@ clusters = pcl.vectors.PointIndices()
 rg.extract(clusters)
 cloud = rg.getColoredCloud()
 pclpy.io.las.write(cloud, r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing/region_growing_no_dense.las")
+cloud.show()
+
+path = r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing/region_growing_no_dense.las"
+data_las = File(path, mode = 'r')
+#extract the coordinates of the .las file
+xyz = np.vstack([data_las.x, data_las.y, data_las.z]).transpose()
+rgb = (np.c_[data_las.Red, data_las.Green, data_las.Blue])/255/255
+v = pptk.viewer(xyz,rgb)
+v.set(point_size=0.002)
+# http://www.pcl-users.org/Finding-oriented-bounding-box-of-a-cloud-td4024616i20.html
+
+
