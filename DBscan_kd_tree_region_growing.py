@@ -1,5 +1,5 @@
-#%% DBscan
-# I nice implementation of DBscaner 
+#%% DBSCAN
+# First nice implementation of DBscaner 
 # https://stackoverflow.com/questions/53076159/dbscan-silhouette-coefficients-does-this-for-loop-work
 import numpy as np
 import pandas as pd
@@ -22,7 +22,7 @@ xyz_nn = np.vstack([xn,yn,zn]).T
 
 
 
-db = DBSCAN(eps=0.02, min_samples=5).fit(xyz_nn)
+db = DBSCAN(eps=eps, min_samples=5).fit(xyz_nn) #0.02
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 core_samples_mask[db.core_sample_indices_] = True
 labels = db.labels_
@@ -118,6 +118,69 @@ colors = [int(i % 23) for i in labels] # 554 labels to 23 distinguished colors
 v = pptk.viewer(data,colors)
 v.set(point_size=0.01)
 
+# matplotlib
+core_samples_mask = np.zeros_like(clustering.labels_, dtype=bool)
+core_samples_mask[clustering.core_sample_indices_] = True
+labels = clustering.labels_
+
+# Number of clusters in labels, ignoring noise if present.
+n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+n_noise_ = list(labels).count(-1)
+
+# #############################################################################
+# Plot result
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+fig = plt.figure()
+ax = Axes3D(fig)
+ax.scatter(data[:,0],data[:,1],data[:,2])
+plt.show()
+
+# Black removed and is used for noise instead.
+unique_labels = set(labels)
+colors = [plt.cm.Spectral(each) for each in np.linspace(0, 1, len(unique_labels))]
+for k, col in zip(unique_labels, colors):
+    if k == -1:
+        # Black used for noise.
+        col = [0, 0, 0, 1]
+
+    class_member_mask = (labels == k)
+
+    xy = data[class_member_mask & core_samples_mask]
+    plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=tuple(col),markeredgecolor='k', markersize=0.1)
+
+    xy = data[class_member_mask & ~core_samples_mask]
+    plt.plot(xy[:, 0], xy[:, 1], 'o', markerfacecolor=tuple(col),
+             markeredgecolor='k', markersize=1)
+
+plt.title('Estimated number of clusters: %d' % n_clusters_)
+plt.show()
+
+
+# convert data to lon,lat
+from math import radians, sin, cos, asin, sqrt
+
+data[:,0] = data[:,0]/(10**5)
+data[:,1] = data[:,1]/(10**4)
+data[:,0] = data[:,0]*4
+
+def calc_dist_tuple(lat1,lon1,lat2,lon2):
+    lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = (sin(dlat / 2) ** 2, cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2)
+    a1 = a[0]; a2 = a[1]
+    c1 = 2 * asin(sqrt(a1))
+    m1 = 1000 * 6371 * c1
+    c2 = 2 * asin(sqrt(a2))
+    m2 = 1000 * 6371 * c2
+    return m1,m2
+
+new_data = np.zeros(data.shape)
+for i in range(data.shape[0]):
+    new_data[i,:2] = calc_dist_tuple(data[0,1],data[0,0],data[i,1],data[i,0])
+new_data[:,2] = data[:,2]
+
 # =============================================================================
 # indices = []
 # for i in range(np.max(labels)):
@@ -127,17 +190,26 @@ v.set(point_size=0.01)
 ## Test of one random cluster ##    
 indices = [np.where(labels==i) for i in range(np.max(labels))]
 
-xyz_5 = data[indices[6]]
-v = pptk.viewer(xyz_5)
+xyz_300 = data[indices[300]]
+v = pptk.viewer(xyz_300)
 v.set(point_size=0.002)
 
-xyz_100 = data[indices[100]]
-v = pptk.viewer(xyz_100)
-v.set(point_size=0.002)
+# convex hull of a cluster
 
-ind = [np.where(np.sum(colors==i)>12) for i in range(np.max(labels))] 
+from scipy.spatial import ConvexHull
+ch = ConvexHull(xyz_300)
+simplices = np.column_stack((np.repeat(ch.vertices[0], ch.nsimplex),
+                                 ch.simplices))
 
-# https://shapely.readthedocs.io/en/latest/project.html
+def tetrahedron_volume(a, b, c, d):
+    return np.abs(np.einsum('ij,ij->i', a-d, np.cross(b-d, c-d))) / 6
+
+tets = ch.points[simplices]
+np.sum(tetrahedron_volume(tets[:, 0], tets[:, 1],
+                                     tets[:, 2], tets[:, 3]))
+
+
+
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.ConvexHull.html    ###############
 # https://stackoverflow.com/questions/24733185/volume-of-convex-hull-with-qhull-from-scipy
 # scipy delaunay
@@ -331,8 +403,59 @@ data_las = File(path, mode = 'r')
 #extract the coordinates of the .las file
 xyz = np.vstack([data_las.x, data_las.y, data_las.z]).transpose()
 rgb = (np.c_[data_las.Red, data_las.Green, data_las.Blue])/255/255
-v = pptk.viewer(xyz,rgb)
-v.set(point_size=0.002)
+
 # http://www.pcl-users.org/Finding-oriented-bounding-box-of-a-cloud-td4024616i20.html
 
+# discriminate the clusters of the xyz based on color
+idx_sort = np.argsort(rgb[:,0])
+sorted_records_array = rgb[idx_sort]
+vals, idx_start, count =np.unique(sorted_records_array, return_counts=True,return_index=True)
+
+# sets of indices
+res = np.split(idx_sort, idx_start[1:])
+
+##filter them with respect to their size, keeping only items occurring more than once
+#vals = vals[count > 1]
+#res = filter(lambda x: x.size > 1, res)
+
+xyz_2 = xyz[res[65]]
+v = pptk.viewer(xyz_2)
+v.set(point_size=0.02)
+
+import startin
+
+dt = startin.DT()
+dt.insert(xyz)
+triangles = np.asarray(dt.all_triangles())
+vertices = np.asarray(dt.all_vertices())
+vertices = vertices[1:,:]
+
+# remove triangles with long edges
+threshold = 0.04
+remove = []
+for i in range(len(triangles)):
+    tr = triangles[i,:]
+    a = tr[0]
+    b = tr[1]
+    c = tr[2]
+    a_cor = vertices[a,:]
+    b_cor = vertices[b,:]
+    c_cor = vertices[c-1,:]
+    dis_a_b = np.sqrt(np.square(a_cor[0]-b_cor[0])+np.square(a_cor[1]-b_cor[1]))
+    dis_b_c = np.sqrt(np.square(c_cor[0]-b_cor[0])+np.square(c_cor[1]-b_cor[1]))
+    dis_a_c = np.sqrt(np.square(c_cor[0]-a_cor[0])+np.square(c_cor[1]-a_cor[1]))
+    check_a = [dis_a_b,dis_a_c]
+    if dis_a_b>threshold and dis_a_c>threshold:
+        remove.append(a)
+    if dis_a_b>threshold and dis_b_c>threshold:
+        remove.append(b)
+    if dis_a_c>threshold and dis_b_c>threshold:
+        remove.append(c)
+
+vertices = np.delete(vertices,remove,axis=0)
+
+v = pptk.viewer(vertices)
+v.set(point_size=0.01)
+    
+    
 
