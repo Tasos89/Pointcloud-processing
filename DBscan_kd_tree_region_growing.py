@@ -4,7 +4,6 @@
 import numpy as np
 import pandas as pd
 from sklearn.cluster import DBSCAN
-#from sklearn import metrics
 from sklearn.datasets import make_blobs
 
 data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv')
@@ -20,9 +19,7 @@ yn = (y - y.min()) / (y.max() - y.min())
 zn = (z - z.min()) / (z.max() - z.min())
 xyz_nn = np.vstack([xn,yn,zn]).T
 
-
-
-db = DBSCAN(eps=eps, min_samples=5).fit(xyz_nn) #0.02
+db = DBSCAN(eps=0.02, min_samples=5).fit(xyz_nn) #0.02 has been found later via elbow..
 core_samples_mask = np.zeros_like(db.labels_, dtype=bool)
 core_samples_mask[db.core_sample_indices_] = True
 labels = db.labels_
@@ -73,8 +70,6 @@ from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
 from kneebow.rotor import Rotor
 
-
-
 data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv')
 #data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\dense_cloud.csv')
 
@@ -87,7 +82,6 @@ xn = (x - x.min()) / (x.max() - x.min())
 yn = (y - y.min()) / (y.max() - y.min())
 zn = (z - z.min()) / (z.max() - z.min())
 xyz_nn = np.vstack([xn,yn,zn]).T
-
 
 #1rst evaluation
 # Nearest neighbors to find the optimal epsilon (maximum distance) https://towardsdatascience.com/machine-learning-clustering-dbscan-determine-the-optimal-value-for-epsilon-eps-python-example-3100091cfbc
@@ -107,8 +101,6 @@ elbow_idx = rotor.get_elbow_index()
 rotor.plot_elbow()
 eps = distances[elbow_idx]/2
 del x,y,xy
-#ind_maximum_curv = np.argmax(np.gradient(distances,3))
-#eps = distances[ind_maximum_curv]
 
 clustering = DBSCAN( algorithm = 'kd_tree',eps=eps, min_samples=5).fit(xyz_nn) #the number of samples is D+1=4
 labels = clustering.labels_
@@ -160,9 +152,8 @@ plt.show()
 # convert data to lon,lat
 from math import radians, sin, cos, asin, sqrt
 
-data[:,0] = data[:,0]/(10**5)
+data[:,0] = data[:,0]*4/(10**5)
 data[:,1] = data[:,1]/(10**4)
-data[:,0] = data[:,0]*4
 
 def calc_dist_tuple(lat1,lon1,lat2,lon2):
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
@@ -190,7 +181,7 @@ new_data[:,2] = data[:,2]
 ## Test of one random cluster ##    
 indices = [np.where(labels==i) for i in range(np.max(labels))]
 
-xyz_300 = data[indices[300]]
+xyz_300 = new_data[indices[300]]
 v = pptk.viewer(xyz_300)
 v.set(point_size=0.002)
 
@@ -395,7 +386,7 @@ rg.setResidualThreshold(10)
 clusters = pcl.vectors.PointIndices()
 rg.extract(clusters)
 cloud = rg.getColoredCloud()
-pclpy.io.las.write(cloud, r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing/region_growing_no_dense.las")
+#pclpy.io.las.write(cloud, r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing/region_growing_no_dense.las")
 cloud.show()
 
 path = r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing/region_growing_no_dense.las"
@@ -418,28 +409,28 @@ res = np.split(idx_sort, idx_start[1:])
 #vals = vals[count > 1]
 #res = filter(lambda x: x.size > 1, res)
 
-xyz_2 = xyz[res[65]]
+xyz_2 = xyz[res[108]]
 v = pptk.viewer(xyz_2)
 v.set(point_size=0.02)
 
 import startin
 
 dt = startin.DT()
-dt.insert(xyz)
+dt.insert(xyz_2)
 triangles = np.asarray(dt.all_triangles())
 vertices = np.asarray(dt.all_vertices())
 vertices = vertices[1:,:]
 
 # remove triangles with long edges
-threshold = 0.04
+threshold = 0.07
 remove = []
 for i in range(len(triangles)):
     tr = triangles[i,:]
     a = tr[0]
     b = tr[1]
     c = tr[2]
-    a_cor = vertices[a,:]
-    b_cor = vertices[b,:]
+    a_cor = vertices[a-1,:]
+    b_cor = vertices[b-1,:]
     c_cor = vertices[c-1,:]
     dis_a_b = np.sqrt(np.square(a_cor[0]-b_cor[0])+np.square(a_cor[1]-b_cor[1]))
     dis_b_c = np.sqrt(np.square(c_cor[0]-b_cor[0])+np.square(c_cor[1]-b_cor[1]))
@@ -451,11 +442,10 @@ for i in range(len(triangles)):
         remove.append(b)
     if dis_a_c>threshold and dis_b_c>threshold:
         remove.append(c)
+    
 
 vertices = np.delete(vertices,remove,axis=0)
 
 v = pptk.viewer(vertices)
 v.set(point_size=0.01)
-    
-    
 
