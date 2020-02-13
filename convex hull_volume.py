@@ -61,8 +61,8 @@ simplices = np.column_stack((np.repeat(ch.vertices[0], ch.nsimplex),
                                  ch.simplices))
 
 def tetrahedron_volume(a, b, c, d):
-    vol = np.abs(np.einsum('ij,ij->i', a-d, np.cross(b-d, c-d))) / 6
-    return print('The volume of the broccoli plant is ',vol,' cubic meters')
+    return np.abs(np.einsum('ij,ij->i', a-d, np.cross(b-d, c-d))) / 6
+
 
 tets = ch.points[simplices]
 np.sum(tetrahedron_volume(tets[:, 0], tets[:, 1],

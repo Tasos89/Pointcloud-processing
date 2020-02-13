@@ -1,0 +1,13 @@
+{
+    "input-las": r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\35m\Rijweg_stalling1-8-6.las",
+    "thinning-factor": 50,
+    "gf-cellsize": 1,
+    "gf-distance": 0.008,
+    "gf-angle": 10,
+    "idw-radius": 5,
+    "idw-power": 2,
+    "output-las": "out.las",
+    "grid-cellsize": 0.5,
+    "output-grid-tin": "out-tin.asc",
+    "output-grid-idw": "out-idw.asc"
+}
