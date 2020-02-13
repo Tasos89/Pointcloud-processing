@@ -156,7 +156,7 @@ while remaining.shape[0]>k:
             hor_dist = np.sqrt(np.square(vertex_rot[0]-point_rot[0,0])+np.square(vertex_rot[1]-point_rot[0,1]))
             beta[j] = np.rad2deg(np.arctan(distance/hor_dist))
         alpha = np.max(beta)
-        if distance<0.008 and alpha<10:
+        if distance<0.01 and alpha<10: #distance 0.008 was nice!
             dt.insert_one_pt(x_point0,y_point0,z_point0)
             remaining = np.delete(remaining,k,0)
             check = 1
