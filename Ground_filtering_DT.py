@@ -7,6 +7,7 @@ import startin
 import pptk
 import json, sys
 
+
 #%% Read the data
 
 #specifiy the folder/file for the .las files. 
@@ -62,12 +63,6 @@ y = inputfile.y
 z = inputfile.z
 xyz = np.vstack((x,y,z)).T
 
-#%%
-print("Examining Header Format:")
-headerformat = inputfile.header.header_format
-for spec in headerformat:
-    print(spec.name)
-
 #%% Extract the lower point of every cell
 
 xmin = np.floor(np.min(x))
@@ -95,7 +90,7 @@ y = np.delete(y,ground_points)
 z = np.delete(z,ground_points)
 xyz_lowest = np.vstack((x_lowest,y_lowest,z_lowest)).T
 
-#%% Create DT 
+#%% Creation of the DTM - DSM
 
 #insert 4 extra point to create a convex hull that includes all points in the dataset
 xyz_outside = np.array([[xmin-gf_cellsize,ymin-gf_cellsize,z_lowest[0]],[xmin-gf_cellsize,ymax+gf_cellsize,z_lowest[len(y_grid)-2]],[xmax+gf_cellsize,ymin-gf_cellsize,z_lowest[len(y_lowest)-(len(y_grid)-1)]],[xmax+gf_cellsize,ymax+gf_cellsize,z_lowest[len(y_lowest)-1]]])
@@ -156,7 +151,7 @@ while remaining.shape[0]>k:
             hor_dist = np.sqrt(np.square(vertex_rot[0]-point_rot[0,0])+np.square(vertex_rot[1]-point_rot[0,1]))
             beta[j] = np.rad2deg(np.arctan(distance/hor_dist))
         alpha = np.max(beta)
-        if distance<0.01 and alpha<10: #distance 0.008 was nice!
+        if distance<0.009 and alpha<8: #distance 0.008 was nice! %0.01 was nice too!
             dt.insert_one_pt(x_point0,y_point0,z_point0)
             remaining = np.delete(remaining,k,0)
             check = 1
@@ -181,4 +176,7 @@ vertices = np.delete(vertices,[0,1,2,3],0)
 triangles = np.asarray(dt.all_triangles())-10
 
 v = pptk.viewer(remaining)
-      
+#v = pptk.viewer(vertices)
+v.set(point_size=0.01)
+
+b = dt.write_obj(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing/DTM.obj')
