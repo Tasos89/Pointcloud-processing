@@ -4,33 +4,46 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.interpolate import griddata
-import matplotlib.pyplot as plt
+import matplotlib
+import cv2
+#from scipy.interpolate import griddata
 
 #%% read data
-data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv')
+input_path = r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv'
+data = pd.read_csv(input_path)
 data = np.asarray(data)
-x = data[:,0]
-y = data[:,1]
-z = data[:,2]
-xy = np.vstack((x,y)).T
 
-#%% interpolation
-
-x_range=(np.max(x)-np.min(x)
-y_range=(np.max(y)-np.min(y)
-grid_x, grid_y = np.mgrid[np.min(x):np.max(x):(x_range*1j), np,min(y):np.max(y):(y_range*1j)]
-points = df[['X','Y']].values
-values = df['new'].values
-grid_z0 = griddata(points, values, (grid_x, grid_y), method='linear').astype(np.uint8)
-im=Image.fromarray(grid_z0,'L')
-im.show()
-
-#%% Image
-# normalize the data and convert to uint8 (grayscale conventions)
-zNorm = (z - np.min(z)) / (np.max(z) - np.min(z)) * 255
-zNormUint8 = zNorm.astype(np.uint8)
-
-# plot result
+#%% from 3D to 2D
+N = 1000
+xstart = np.min(data[:,0])
+ystart = np.min(data[:,1])
+xstep = (np.max(data[:,0])-np.min(data[:,0]))/N
+ystep = (np.max(data[:,1])-np.min(data[:,1]))/N
+im = np.zeros((N,N))
+for k in range(len(data)):
+    i = int((data[k,0]-xstart)/xstep) -1
+    j = int((data[k,1]-ystart)/ystep) -1
+    #im[i,j]=data[k,2]*100000
+    im[i,j] = 1
 plt.figure()
-plt.imshow(zNormUint8)
+plt.imshow(im)
+
+#%% save numpy array to .png 
+
+matplotlib.image.imsave(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D2.png', im)
+
+#%% read it as a grey scale image
+
+img = cv2.imread(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D2.png')
+grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+cv2.imshow('Gray image', grey)
+
+grey = np.asarray(grey).astype(float)
+
+int = np.where(grey!=30)
+grey[int] = None
+
+plt.imshow(grey)
+
+matplotlib.image.imsave(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D.png', grey)
