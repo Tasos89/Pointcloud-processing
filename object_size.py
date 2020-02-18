@@ -10,8 +10,8 @@ def midpoint(ptA, ptB):
 	return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--image", required=True,
+ap.add_argument("-i", r"C:/Users/laptop/Desktop/IMG_20200215_184142.jpg", required=True,
 	help="path to the input image")
-ap.add_argument("-w", "--width", type=float, required=True,
+ap.add_argument("-w", "2", type=float, required=True,
 	help="width of the left-most object in the image (in inches)")
 args = vars(ap.parse_args())
