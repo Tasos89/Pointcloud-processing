@@ -9,7 +9,8 @@ import cv2
 #from scipy.interpolate import griddata
 
 #%% read data
-input_path = r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv'
+#input_path = r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv'
+input_path = r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\dense_cloud_plants.csv"
 data = pd.read_csv(input_path)
 data = np.asarray(data)
 
@@ -30,11 +31,14 @@ plt.imshow(im)
 
 #%% save numpy array to .png 
 
-matplotlib.image.imsave(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D2.png', im)
+#matplotlib.image.imsave(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D2.png', im)
+matplotlib.image.imsave(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D_dense.png', im)
+
 
 #%% read it as a grey scale image
 
-img = cv2.imread(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D2.png')
+#img = cv2.imread(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D2.png')
+img = cv2.imread(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D_dense.png')
 grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 cv2.imshow('Gray image', grey)
@@ -46,4 +50,4 @@ grey[int] = None
 
 plt.imshow(grey)
 
-matplotlib.image.imsave(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D.png', grey)
+matplotlib.image.imsave(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D_dense.png', grey)

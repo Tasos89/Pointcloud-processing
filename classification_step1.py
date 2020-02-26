@@ -1,4 +1,4 @@
-# import packages 
+#%% import packages 
 import os
 import pptk
 import numpy as np
@@ -8,11 +8,14 @@ from sklearn.neighbors import NearestNeighbors
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import MinMaxScaler
+import time
 
 #%%
 
 #specifiy the folder/file for the .las files. 
-path = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\AZ74_10m-0-1 - Cloud.las"
+#path = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\AZ74_10m-0-1 - Cloud.las"
+path = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\35m\Rijweg_stalling1-9-5.las"
+
 if path.endswith('las'):
     data_las = File(path, mode = 'r')
     #extract the coordinates of the .las file
@@ -103,14 +106,16 @@ xyz_nn = np.vstack([xn,yn,zn]).T
 
 #%% 
 # Nearest neighbors with normalized data. The confusion matrix return better results but the visualization was not so good
+start_time = time.clock()
 
 nbrs = NearestNeighbors(n_neighbors = 35, algorithm = 'kd_tree').fit(xyz_nn) #['auto', 'ball_tree', 'kd_tree', 'brute']
 distances, indices = nbrs.kneighbors(xyz_nn) #the indices of the nearest neighbors 
 
 
-#%% 
+
 # extraction of geometrical features among the nearest neighbors 
 # https://towardsdatascience.com/an-approach-to-choosing-the-number-of-components-in-a-principal-component-analysis-pca-3b9f3d6e73fe
+
 
 linearity = []
 planarity = []
@@ -173,6 +178,7 @@ mean_el_n = (m_e -m_e.min()) / (m_e.max() - m_e.min())
 d_e = np.asarray(dif_elev)
 dif_elev_n = (d_e -d_e.min()) / (d_e.max() - d_e.min())
 
+print (time.clock() - start_time, "seconds")
 
 #visualization
 # =============================================================================

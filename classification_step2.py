@@ -454,6 +454,7 @@ v = pptk.viewer(xyz,yy_pred)
 
 #%% Train the classifier "Random forest"
 # https://blog.goodaudience.com/machine-learning-using-decision-trees-and-random-forests-in-python-with-code-e50f6e14e19f
+start_time = time.clock()
 rfc = RandomForestClassifier(n_estimators=100)
 rfc.fit(x_train,y_train)
 yyy_pred = rfc.predict(x_test) #the predictions
@@ -461,14 +462,13 @@ yyy_pred = rfc.predict(x_test) #the predictions
 predictions_forest = np.array(yyy_pred).argmax(axis=1)
 confusion_matrix(species,predictions_forest)
 
-#%% classification with random forest
+# classification with random forest
 #https://www.geeksforgeeks.org/how-to-start-learning-machine-learning/
-
 yyyy_pred = rfc.predict(xx)
 v = pptk.viewer(xyz,yyyy_pred)
-v.set(point_size=0.01)
-
-#%%
+v.set(point_size=0.001)
+print (time.clock() - start_time, "seconds")
+throught #%%
 # keep only the broccoli points by keeping the red points
 red_indices = np.where(yyyy_pred[:,0]==1)
 red_indices = np.reshape(red_indices,-1,1)
