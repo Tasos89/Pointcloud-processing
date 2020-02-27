@@ -50,6 +50,7 @@ change_curvature = []
 dif_elev = []
 mean_elev = []
 omnivariance = []
+eigenentropy = []
 
 for i in range(len(indices_B)):
     ind = indices_B[i]
@@ -81,6 +82,8 @@ for i in range(len(indices_B)):
     mean_elev.append(m_el)
     d_el = z.max()-z.min()
     dif_elev.append(d_el)
+    ei = -(e[0]*math.log(e[0])+e[1]*math.log(e[1])+e[2]*math.log(e[2]))
+    eigenentropy.append(ei)
     
 omnivariance = np.asarray(omnivariance)
 l = np.asarray(linearity)
@@ -100,43 +103,46 @@ an_n_B = (an -an.min()) / (an.max() - an.min())
 ch_cur_n_B = (ch -ch.min()) / (ch.max() - ch.min())
 mean_el_n_B = (m_e -m_e.min()) / (m_e.max() - m_e.min())
 dif_elev_n_B = (d_e -d_e.min()) / (d_e.max() - d_e.min())
-
+eig = np.asarray(eigenentropy)
+ei_n_B = (eig -eig.min()) / (eig.max() - eig.min())
 # from BGR to Lab # https://gist.github.com/bikz05/6fd21c812ef6ebac66e1
-# =============================================================================
-# def func(t):
-#     if (t > 0.008856):
-#         return np.power(t, 1/3.0);
-#     else:
-#         return 7.787 * t + 16 / 116.0;
-# matrix = [[0.412453, 0.357580, 0.180423],
-#           [0.212671, 0.715160, 0.072169],
-#           [0.019334, 0.119193, 0.950227]]
-# Lab_OpenCv = []
-# Lab_B = np.zeros((len(rgb_B),3))
-# for row in rgb_B:
-#     cie = np.dot(matrix, row);
-#     cie[0] = cie[0] /0.950456;
-#     cie[2] = cie[2] /1.088754; 
-#     L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
-#     a = 500*(func(cie[0]) - func(cie[1]));
-#     b = 200*(func(cie[1]) - func(cie[2]));
-#     Lab_B = [b , a, L]; 
-#     L = L * 255 / 100;
-#     a = a + 128;
-#     b = b + 128;
-#     Lab_OpenCv.append([b,a,L])
-# Lab_OpenCv = np.asarray(Lab_OpenCv)
-# scaler = MinMaxScaler()
-# Lab_B = scaler.fit_transform(Lab_OpenCv)
-# Lab_B[:,2] = 0.0
-# b_B = Lab_B[:,0]
-# a_B = Lab_B[:,1]
-# L_B = Lab_B[:,2]
-# =============================================================================
+#def func(t):
+#    if (t > 0.008856):
+#        return np.power(t, 1/3.0);
+#    else:
+#        return 7.787 * t + 16 / 116.0;
+#matrix = [[0.412453, 0.357580, 0.180423],
+#          [0.212671, 0.715160, 0.072169],
+#          [0.019334, 0.119193, 0.950227]]
+#Lab_OpenCv = []
+#Lab_B = np.zeros((len(rgb_B),3))
+#for row in rgb_B:
+#    cie = np.dot(matrix, row);
+#    cie[0] = cie[0] /0.950456;
+#    cie[2] = cie[2] /1.088754; 
+#    L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
+#    a = 500*(func(cie[0]) - func(cie[1]));
+#    b = 200*(func(cie[1]) - func(cie[2]));
+#    Lab_B = [b , a, L]; 
+#    L = L * 255 / 100;
+#    a = a + 128;
+#    b = b + 128;
+#    Lab_OpenCv.append([b,a,L])
+##Lab_OpenCv = np.asarray(Lab_OpenCv)
+##scaler = MinMaxScaler()
+##Lab_B = scaler.fit_transform(Lab_OpenCv)
+##Lab_B[:,2] = 0.0
+##b_B = Lab_B[:,0]
+##a_B = Lab_B[:,1]
+##L_B = Lab_B[:,2]
+#Lab = np.asarray(Lab_OpenCv)
+#b_B = (Lab[:,0] - Lab[:,0].min()) / (Lab[:,0].max() - Lab[:,0].min())
+#a_B = (Lab[:,1] - Lab[:,1].min()) / (Lab[:,1].max() - Lab[:,1].min())
+
 
 Broccoli_LABEL = 1.*np.ones(len(xyz_B))
 if 'Lab_B' in locals():
-    features_B = np.vstack((omn_n_B, dif_elev_n_B, L_B, a_B, b_B, Broccoli_LABEL)).T #Lab
+    features_B = np.vstack((omn_n_B, dif_elev_n_B, ei_n_B, a_B, b_B, Broccoli_LABEL)).T #Lab
 else:
     features_B = np.vstack((omn_n_B, dif_elev_n_B, R, G ,B, Broccoli_LABEL)).T #rgb
 
@@ -180,6 +186,7 @@ change_curvature = []
 dif_elev = []
 mean_elev = []
 omnivariance = []
+eigenentropy = []
 
 for i in range(len(indices_G)):
     ind = indices_G[i]
@@ -211,6 +218,8 @@ for i in range(len(indices_G)):
     mean_elev.append(m_el)
     d_el = z.max()-z.min()
     dif_elev.append(d_el)
+    ei = -(e[0]*math.log(e[0])+e[1]*math.log(e[1])+e[2]*math.log(e[2]))
+    eigenentropy.append(ei)
     
 omnivariance = np.asarray(omnivariance)
 l = np.asarray(linearity)
@@ -230,43 +239,47 @@ an_n_G = (an -an.min()) / (an.max() - an.min())
 ch_cur_n_G = (ch -ch.min()) / (ch.max() - ch.min())
 mean_el_n_G = (m_e -m_e.min()) / (m_e.max() - m_e.min())
 dif_elev_n_G = (d_e -d_e.min()) / (d_e.max() - d_e.min())
+eig = np.asarray(eigenentropy)
+ei_n_G = (eig -eig.min()) / (eig.max() - eig.min())
 
 # from BGR to Lab # https://gist.github.com/bikz05/6fd21c812ef6ebac66e1
-# =============================================================================
-# def func(t):
-#     if (t > 0.008856):
-#         return np.power(t, 1/3.0);
-#     else:
-#         return 7.787 * t + 16 / 116.0;
-# matrix = [[0.412453, 0.357580, 0.180423],
-#           [0.212671, 0.715160, 0.072169],
-#           [0.019334, 0.119193, 0.950227]]
-# Lab_OpenCv = []
-# Lab_G = np.zeros((len(rgb_G),3))
-# for row in rgb_G:
-#     cie = np.dot(matrix, row);
-#     cie[0] = cie[0] /0.950456;
-#     cie[2] = cie[2] /1.088754; 
-#     L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
-#     a = 500*(func(cie[0]) - func(cie[1]));
-#     b = 200*(func(cie[1]) - func(cie[2]));
-#     Lab_B = [b , a, L]; 
-#     L = L * 255 / 100;
-#     a = a + 128;
-#     b = b + 128;
-#     Lab_OpenCv.append([b,a,L])
-# Lab_OpenCv = np.asarray(Lab_OpenCv)
-# scaler = MinMaxScaler()
-# Lab_G = scaler.fit_transform(Lab_OpenCv)
-# Lab_G[:,2] = 0.0
-# b_G = Lab_G[:,0]
-# a_G = Lab_G[:,1]
-# L_G = Lab_G[:,2]
-# =============================================================================
+#def func(t):
+#    if (t > 0.008856):
+#        return np.power(t, 1/3.0);
+#    else:
+#        return 7.787 * t + 16 / 116.0;
+#matrix = [[0.412453, 0.357580, 0.180423],
+#          [0.212671, 0.715160, 0.072169],
+#          [0.019334, 0.119193, 0.950227]]
+#Lab_OpenCv = []
+#Lab_G = np.zeros((len(rgb_G),3))
+#for row in rgb_G:
+#    cie = np.dot(matrix, row);
+#    cie[0] = cie[0] /0.950456;
+#    cie[2] = cie[2] /1.088754; 
+#    L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
+#    a = 500*(func(cie[0]) - func(cie[1]));
+#    b = 200*(func(cie[1]) - func(cie[2]));
+#    Lab_B = [b , a, L]; 
+#    L = L * 255 / 100;
+#    a = a + 128;
+#    b = b + 128;
+#    Lab_OpenCv.append([b,a,L])
+##Lab_OpenCv = np.asarray(Lab_OpenCv)
+##scaler = MinMaxScaler()
+##Lab_G = scaler.fit_transform(Lab_OpenCv)
+##Lab_G[:,2] = 0.0
+##b_G = Lab_G[:,0]
+##a_G = Lab_G[:,1]
+##L_G = Lab_G[:,2]
+#Lab = np.asarray(Lab_OpenCv)
+#b_G = (Lab[:,0] - Lab[:,0].min()) / (Lab[:,0].max() - Lab[:,0].min())
+#a_G = (Lab[:,1] - Lab[:,1].min()) / (Lab[:,1].max() - Lab[:,1].min())
+
 
 Grass_LABEL = 2.*np.ones(len(xyz_G))
 if 'Lab_G' in locals():
-    features_G = np.vstack((omn_n_G, dif_elev_n_G, L_G, a_G, b_G, Grass_LABEL)).T # Lab
+    features_G = np.vstack((omn_n_G, dif_elev_n_G, ei_n_G, a_G, b_G, Grass_LABEL)).T # Lab
 else:
     features_G = np.vstack((omn_n_G, dif_elev_n_G, R, G, B, Grass_LABEL)).T
 
@@ -311,6 +324,7 @@ change_curvature = []
 dif_elev = []
 mean_elev = []
 omnivariance = []
+eigenentropy = []
 
 for i in range(len(indices_S)):
     ind = indices_S[i]
@@ -342,6 +356,8 @@ for i in range(len(indices_S)):
     mean_elev.append(m_el)
     d_el = z.max()-z.min()
     dif_elev.append(d_el)
+    ei = -(e[0]*math.log(e[0])+e[1]*math.log(e[1])+e[2]*math.log(e[2]))
+    eigenentropy.append(ei)
     
 omnivariance = np.asarray(omnivariance)
 l = np.asarray(linearity)
@@ -361,43 +377,46 @@ an_n_S = (an -an.min()) / (an.max() - an.min())
 ch_cur_n_S = (ch -ch.min()) / (ch.max() - ch.min())
 mean_el_n_S = (m_e -m_e.min()) / (m_e.max() - m_e.min())
 dif_elev_n_S = (d_e -d_e.min()) / (d_e.max() - d_e.min())
+eig = np.asarray(eigenentropy)
+ei_n_S = (eig -eig.min()) / (eig.max() - eig.min())
 
 # from BGR to Lab # https://gist.github.com/bikz05/6fd21c812ef6ebac66e1
-# =============================================================================
-# def func(t):
-#     if (t > 0.008856):
-#         return np.power(t, 1/3.0);
-#     else:
-#         return 7.787 * t + 16 / 116.0;
-# matrix = [[0.412453, 0.357580, 0.180423],
-#           [0.212671, 0.715160, 0.072169],
-#           [0.019334, 0.119193, 0.950227]]
-# Lab_OpenCv = []
-# Lab_S = np.zeros((len(rgb_S),3))
-# for row in rgb_S:
-#     cie = np.dot(matrix, row);
-#     cie[0] = cie[0] /0.950456;
-#     cie[2] = cie[2] /1.088754; 
-#     L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
-#     a = 500*(func(cie[0]) - func(cie[1]));
-#     b = 200*(func(cie[1]) - func(cie[2]));
-#     Lab_B = [b , a, L]; 
-#     L = L * 255 / 100;
-#     a = a + 128;
-#     b = b + 128;
-#     Lab_OpenCv.append([b,a,L])
-# Lab_OpenCv = np.asarray(Lab_OpenCv)
-# scaler = MinMaxScaler()
-# Lab_S = scaler.fit_transform(Lab_OpenCv)
-# Lab_S[:,2] = 0.0
-# b_S = Lab_S[:,0]
-# a_S = Lab_S[:,1]
-# L_S = Lab_S[:,2]
-# =============================================================================
+#def func(t):
+#    if (t > 0.008856):
+#        return np.power(t, 1/3.0);
+#    else:
+#        return 7.787 * t + 16 / 116.0;
+#matrix = [[0.412453, 0.357580, 0.180423],
+#          [0.212671, 0.715160, 0.072169],
+#          [0.019334, 0.119193, 0.950227]]
+#Lab_OpenCv = []
+#Lab_S = np.zeros((len(rgb_S),3))
+#for row in rgb_S:
+#    cie = np.dot(matrix, row);
+#    cie[0] = cie[0] /0.950456;
+#    cie[2] = cie[2] /1.088754; 
+#    L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
+#    a = 500*(func(cie[0]) - func(cie[1]));
+#    b = 200*(func(cie[1]) - func(cie[2]));
+#    Lab_B = [b , a, L]; 
+#    L = L * 255 / 100;
+#    a = a + 128;
+#    b = b + 128;
+#    Lab_OpenCv.append([b,a,L])
+##Lab_OpenCv = np.asarray(Lab_OpenCv)
+##scaler = MinMaxScaler()
+##Lab_S = scaler.fit_transform(Lab_OpenCv)
+##Lab_S[:,2] = 0.0
+##b_S = Lab_S[:,0]
+##a_S = Lab_S[:,1]
+##L_S = Lab_S[:,2]
+#Lab = np.asarray(Lab_OpenCv)
+#b_S = (Lab[:,0] - Lab[:,0].min()) / (Lab[:,0].max() - Lab[:,0].min())
+#a_S = (Lab[:,1] - Lab[:,1].min()) / (Lab[:,1].max() - Lab[:,1].min())
 
 Soil_LABEL = 3.*np.ones(len(xyz_S))
 if 'Lab_S' in locals():
-    features_S = np.vstack((omn_n_S, dif_elev_n_S, L_S, a_S, b_S, Soil_LABEL)).T # Lab
+    features_S = np.vstack((omn_n_S, dif_elev_n_S, ei_n_S, a_S, b_S, Soil_LABEL)).T # Lab
 else:
     features_S = np.vstack((omn_n_S, dif_elev_n_S, R, G, B, Soil_LABEL)).T
 
@@ -409,7 +428,7 @@ else:
 # https://towardsdatascience.com/discretisation-using-decision-trees-21910483fa4b
 
 if 'Lab' in locals():
-    feature_names = ['omnivariance','difference in elevation','L','a','b','label'] #Lab
+    feature_names = ['omnivariance','difference in elevation','eigenentropy','a','b','label'] #Lab
 else:
     if np.shape(features)[1] == 5:
         feature_names = ['omn','dif_elev','R','G','B','label'] #rgb

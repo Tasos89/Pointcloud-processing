@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import MinMaxScaler
 import time
+import math
 
 #%%
 
@@ -57,52 +58,55 @@ xyz_nn = np.vstack([xn,yn,zn]).T
 
 # from BGR to Lab # https://gist.github.com/bikz05/6fd21c812ef6ebac66e1
 # The results using Lab instead of RGB was not so good, hence changing the color space didn't work for early crop data
-# =============================================================================
-# def func(t):
-#     if (t > 0.008856):
-#         return np.power(t, 1/3.0);
-#     else:
-#         return 7.787 * t + 16 / 116.0;
-# 
-# #Conversion Matrix
-# matrix = [[0.412453, 0.357580, 0.180423],
-#           [0.212671, 0.715160, 0.072169],
-#           [0.019334, 0.119193, 0.950227]]
-# 
-# # RGB values lie between 0 to 1.0
-# Lab_OpenCv = []
-# Lab = np.zeros((len(rgb),3))
-# for row in rgb:
-#     cie = np.dot(matrix, row);
-#     
-#     cie[0] = cie[0] /0.950456;
-#     cie[2] = cie[2] /1.088754; 
-#     
-#     # Calculate the L
-#     L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
-#     
-#     # Calculate the a 
-#     a = 500*(func(cie[0]) - func(cie[1]));
-#     
-#     # Calculate the b
-#     b = 200*(func(cie[1]) - func(cie[2]));
-#     
-#     #  Values lie between -128 < b <= 127, -128 < a <= 127, 0 <= L <= 100 
-#     Lab = [b , a, L]; 
-#     
-#     # OpenCV Format
-#     L = L * 255 / 100;
-#     a = a + 128;
-#     b = b + 128;
-#     Lab_OpenCv.append([b,a,L])
-# Lab_OpenCv = np.asarray(Lab_OpenCv)
-# scaler = MinMaxScaler()
-# Lab = scaler.fit_transform(Lab_OpenCv)
-# Lab[:,2] = 0.0
-# b = Lab[:,0]
-# a = Lab[:,1]
-# L = Lab[:,2]
-# =============================================================================
+#def func(t):
+#    if (t > 0.008856):
+#        return np.power(t, 1/3.0);
+#    else:
+#        return 7.787 * t + 16 / 116.0;
+#
+##Conversion Matrix
+#matrix = [[0.412453, 0.357580, 0.180423],
+#          [0.212671, 0.715160, 0.072169],
+#          [0.019334, 0.119193, 0.950227]]
+#
+## RGB values lie between 0 to 1.0
+#Lab_OpenCv = []
+#Lab = np.zeros((len(rgb),3))
+#for row in rgb:
+#    cie = np.dot(matrix, row);
+#    
+#    cie[0] = cie[0] /0.950456;
+#    cie[2] = cie[2] /1.088754; 
+#    
+#    # Calculate the L
+#    L = 116 * np.power(cie[1], 1/3.0) - 16.0 if cie[1] > 0.008856 else 903.3 * cie[1];
+#    
+#    # Calculate the a 
+#    a = 500*(func(cie[0]) - func(cie[1]));
+#    
+#    # Calculate the b
+#    b = 200*(func(cie[1]) - func(cie[2]));
+#    
+#    #  Values lie between -128 < b <= 127, -128 < a <= 127, 0 <= L <= 100 
+#    Lab = [b , a, L]; 
+#    
+#    # OpenCV Format
+#    L = L * 255 / 100;
+#    a = a + 128;
+#    b = b + 128;
+#    Lab_OpenCv.append([b,a,L])
+##Lab_OpenCv = np.asarray(Lab_OpenCv)
+##scaler = MinMaxScaler()
+##Lab = scaler.fit_transform(Lab_OpenCv)
+##Lab[:,2] = 0.0
+##b = Lab[:,0]
+##a = Lab[:,1]
+##L = Lab[:,2]
+#Lab = np.asarray(Lab_OpenCv)
+#b = (Lab[:,0] - Lab[:,0].min()) / (Lab[:,0].max() - Lab[:,0].min())
+#a = (Lab[:,1] - Lab[:,1].min()) / (Lab[:,1].max() - Lab[:,1].min())
+#L = (Lab[:,2] - Lab[:,2].min()) / (Lab[:,2].max() - Lab[:,2].min())
+#Lab = np.vstack((b,a,L)).T
 
 #%% 
 # Nearest neighbors with normalized data. The confusion matrix return better results but the visualization was not so good
@@ -126,6 +130,7 @@ change_curvature = []
 dif_elev = []
 mean_elev = []
 omnivariance = []
+eigenentropy = []
 
 for i in range(len(indices)):
     ind = indices[i]
@@ -158,6 +163,8 @@ for i in range(len(indices)):
     mean_elev.append(m_el)
     d_el = z.max()-z.min()
     dif_elev.append(d_el)
+    ei = -(e[0]*math.log(e[0])+e[1]*math.log(e[1])+e[2]*math.log(e[2]))
+    eigenentropy.append(ei)
      
 # normalization of the geometrical features
 # https://stats.stackexchange.com/questions/69157/why-do-we-need-to-normalize-data-before-principal-component-analysis-pca
@@ -177,6 +184,8 @@ m_e = np.asarray(mean_elev)
 mean_el_n = (m_e -m_e.min()) / (m_e.max() - m_e.min())
 d_e = np.asarray(dif_elev)
 dif_elev_n = (d_e -d_e.min()) / (d_e.max() - d_e.min())
+eig = np.asarray(eigenentropy)
+ei_n = (eig -eig.min()) / (eig.max() - eig.min())
 
 print (time.clock() - start_time, "seconds")
 
@@ -209,7 +218,7 @@ print (time.clock() - start_time, "seconds")
 
 # features chooce
 if 'Lab' in locals():
-    features = np.vstack((omn_n, dif_elev_n, L, a, b)).T #Lab
+    features = np.vstack((omn_n, dif_elev_n, ei_n, a, b)).T #Lab
 else:
     features = np.vstack((omn_n, dif_elev_n, R, G, B)).T #rgb
 
