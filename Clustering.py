@@ -88,6 +88,9 @@ for k, col in zip(unique_labels, colors):
 plt.title('Estimated number of clusters: %d' % n_clusters_)
 plt.show()
 
+# accuracy evaluation
+accuracy = 553/730
+
 # a 2nd evaluation of the eps
 #n=10
 #scores = np.zeros(n)
@@ -244,3 +247,9 @@ rg.extract(clusters)
 cloud = rg.getColoredCloud()
 pclpy.io.las.write(cloud, r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing/region_growing_no_dense.las")
 cloud.show()
+
+# the number of cclusters
+n_clusters = len(clusters)
+
+# accuracy 
+accuracy_rg = n_clusters/700

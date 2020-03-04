@@ -485,9 +485,9 @@ confusion_matrix(species,predictions_forest)
 #https://www.geeksforgeeks.org/how-to-start-learning-machine-learning/
 yyyy_pred = rfc.predict(xx)
 v = pptk.viewer(xyz,yyyy_pred)
-v.set(point_size=0.001)
+v.set(point_size=0.01)
 print (time.clock() - start_time, "seconds")
-throught #%%
+
 # keep only the broccoli points by keeping the red points
 red_indices = np.where(yyyy_pred[:,0]==1)
 red_indices = np.reshape(red_indices,-1,1)
