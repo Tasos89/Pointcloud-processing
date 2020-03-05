@@ -89,7 +89,7 @@ plt.title('Estimated number of clusters: %d' % n_clusters_)
 plt.show()
 
 # accuracy evaluation
-accuracy = 553/730
+accuracy = n_clusters/700
 
 # a 2nd evaluation of the eps
 #n=10

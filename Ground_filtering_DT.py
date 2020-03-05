@@ -7,54 +7,7 @@ import startin
 import pptk
 import json, sys
 
-
-#%% Read the data
-
-#specifiy the folder/file for the .las files. 
-#path = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\35m\Rijweg_stalling1-8-6.las"
-#if path.endswith('las'):
-#    data_las = File(path, mode = 'r')
-#    #extract the coordinates of the .las file
-#    xyz = np.vstack([data_las.x, data_las.y, data_las.z]).transpose()
-#    rgb = ((np.c_[data_las.Red, data_las.Green, data_las.Blue]) / 255.) / 255. #normalized
-#else:
-#    las_files = []
-#    for root, dirs, files in os.walk(path, topdown=True):
-#        for name in files:
-#            if name[-4:] == ".las": 
-#                las_files.append(os.path.join(root,name).replace("\\","/"))
-#    las_list = []
-#    rgb_l = []
-#    for file in las_files[:10]: #specify the number of file you want to open
-#        data_las = File(file, mode='r')
-#        rgb = ((np.c_[data_las.Red, data_las.Green, data_las.Blue]) / 255.) / 255. #normalized
-#        xyz = np.vstack([data_las.x, data_las.y, data_las.z]).transpose()
-#        las_list.append(xyz)
-#        rgb_l.append(rgb)
-#    #extract the coordinates of the .las file
-#    xyz = np.concatenate(las_list, axis = 0)
-#    rgb = np.concatenate(rgb_l, axis = 0)
-
-gf_distance = 0.008
-gf_angle = 10
-grid_cellsize = 0.5
-gf_cellsize = 1    
-
-
-
-#import of parameters
-#jparams = json.load(open(r"C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\params.json"))
-#thinning_factor = jparams["thinning-factor"]
-#gf_distance = jparams["gf-distance"]
-#gf_angle = jparams["gf-angle"]
-#gf_cellsize = jparams["gf-cellsize"]
-#idw_power = jparams["idw-power"]
-#idw_radius = jparams["idw-radius"]
-#grid_cellsize = jparams["grid-cellsize"]
-#input_las = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\35m\Rijweg_stalling1-8-6.las"
-#output_grid_idw = jparams["output-grid-idw"]
-#output_grid_tin = jparams["output-grid-tin"]
-#output_las = jparams["output-las"]
+#%% Read the data / initialize the parameters
 
 input_las =  r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\35m\Rijweg_stalling1-8-6.las"
 inputfile = File(input_las,mode="r")
@@ -62,6 +15,11 @@ x = inputfile.x
 y = inputfile.y
 z = inputfile.z
 xyz = np.vstack((x,y,z)).T
+
+gf_distance = 0.008
+gf_angle = 10
+grid_cellsize = 0.5
+gf_cellsize = 1    
 
 #%% Extract the lower point of every cell
 
@@ -179,4 +137,14 @@ v = pptk.viewer(remaining)
 #v = pptk.viewer(vertices)
 v.set(point_size=0.01)
 
-b = dt.write_obj(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing/DTM.obj')
+DTM = dt.write_obj(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing/DTM.obj')
+
+import pandas as pd
+dt = startin.DT()
+dt.insert(remaining)
+dtm = dt.all_vertices()
+DSM = np.array(dtm)
+Header = ['x','y','z']
+DSM[np.isnan(DSM)]=nodata_value
+DSM[DSM==-99999.99999]=None
+DSM = pd.DataFrame(data=DSM,columns=Header)
