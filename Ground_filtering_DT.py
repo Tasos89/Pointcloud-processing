@@ -1,5 +1,5 @@
 # Ground filtering usning Delaunay Triangulation
-
+import laspy
 import math
 from laspy.file import File
 import numpy as np
@@ -16,9 +16,9 @@ y = inputfile.y
 z = inputfile.z
 xyz = np.vstack((x,y,z)).T
 
+#%%initialize the parameters 
 gf_distance = 0.008
 gf_angle = 10
-grid_cellsize = 0.5
 gf_cellsize = 1    
 
 #%% Extract the lower point of every cell
@@ -42,23 +42,23 @@ for i in np.arange(0,len(x_grid)-1):
 x_lowest = x[ground_points]
 y_lowest = y[ground_points]
 z_lowest = z[ground_points]
+xyz_lowest = np.vstack((x_lowest,y_lowest,z_lowest)).T
 
 x = np.delete(x,ground_points)
 y = np.delete(y,ground_points)
 z = np.delete(z,ground_points)
-xyz_lowest = np.vstack((x_lowest,y_lowest,z_lowest)).T
+remaining = np.concatenate((x.reshape(-1,1),y.reshape(-1,1),z.reshape(-1,1)),axis=1)
 
 #%% Creation of the DTM - DSM
 
 #insert 4 extra point to create a convex hull that includes all points in the dataset
 xyz_outside = np.array([[xmin-gf_cellsize,ymin-gf_cellsize,z_lowest[0]],[xmin-gf_cellsize,ymax+gf_cellsize,z_lowest[len(y_grid)-2]],[xmax+gf_cellsize,ymin-gf_cellsize,z_lowest[len(y_lowest)-(len(y_grid)-1)]],[xmax+gf_cellsize,ymax+gf_cellsize,z_lowest[len(y_lowest)-1]]])
 points_initial = np.concatenate((xyz_outside,xyz_lowest),axis=0)
-added = points_initial.shape[0]
+#added = points_initial.shape[0]
 
 dt = startin.DT()
 dt.insert(points_initial)
 
-remaining = np.concatenate((x.reshape(-1,1),y.reshape(-1,1),z.reshape(-1,1)),axis=1)
 points_outside = []
 k = 0
 check = 0
@@ -109,7 +109,7 @@ while remaining.shape[0]>k:
             hor_dist = np.sqrt(np.square(vertex_rot[0]-point_rot[0,0])+np.square(vertex_rot[1]-point_rot[0,1]))
             beta[j] = np.rad2deg(np.arctan(distance/hor_dist))
         alpha = np.max(beta)
-        if distance<0.009 and alpha<8: #distance 0.008 was nice! %0.01 was nice too!
+        if distance<gf_distance and alpha<gf_angle: #distance 0.009 was nice alpha =8
             dt.insert_one_pt(x_point0,y_point0,z_point0)
             remaining = np.delete(remaining,k,0)
             check = 1
@@ -137,14 +137,7 @@ v = pptk.viewer(remaining)
 #v = pptk.viewer(vertices)
 v.set(point_size=0.01)
 
-DTM = dt.write_obj(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing/DTM.obj')
+dtm = np.savetxt(r"C:\Users\laptop\Google Drive\pictures for the internship report\presentation\potree\dtm.csv",vertices)
+dsm = np.savetxt(r"C:\Users\laptop\Google Drive\pictures for the internship report\presentation\potree\dsm.csv",remaining)
 
-import pandas as pd
-dt = startin.DT()
-dt.insert(remaining)
-dtm = dt.all_vertices()
-DSM = np.array(dtm)
-Header = ['x','y','z']
-DSM[np.isnan(DSM)]=nodata_value
-DSM[DSM==-99999.99999]=None
-DSM = pd.DataFrame(data=DSM,columns=Header)
+DTM = dt.write_obj(r"C:\Users\laptop\Google Drive\pictures for the internship report\presentation\potree/DTM.obj")
