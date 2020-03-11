@@ -11,14 +11,26 @@ from kneebow.rotor import Rotor
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import sklearn
+from laspy.file import File
 
-data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv')
+#data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv')
 #data = pd.read_csv(r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\dense_cloud.csv')
+data = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\processed_data\only_broccoli.las"
 
-data = np.asarray(data)
-x = np.array(data[:,0])
-y = np.array(data[:,1])
-z = np.array(data[:,2])
+if data[-4:]=='.las':
+    data = File(data, mode='r') 
+
+    x = data.x
+    y = data.y
+    z = data.z
+    xyz = np.vstack((x,y,z)).T
+    data = np.asarray(xyz)
+else:
+
+    data = np.asarray(data)
+    x = np.array(data[:,0])
+    y = np.array(data[:,1])
+    z = np.array(data[:,2])
 
 xn = (x - x.min()) / (x.max() - x.min())
 yn = (y - y.min()) / (y.max() - y.min())

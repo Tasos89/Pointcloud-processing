@@ -485,7 +485,7 @@ confusion_matrix(species,predictions_forest)
 #https://www.geeksforgeeks.org/how-to-start-learning-machine-learning/
 yyyy_pred = rfc.predict(xx)
 v = pptk.viewer(xyz,yyyy_pred)
-v.set(point_size=0.01)
+v.set(point_size=0.001)
 print (time.clock() - start_time, "seconds")
 
 # keep only the broccoli points by keeping the red points
@@ -497,3 +497,8 @@ rgb_broccoli = rgb[red_indices,:]
 #visualization
 v = pptk.viewer(only_broccoli,rgb_broccoli) 
 v.set(point_size=0.01)
+
+#%% save the classified broccoly points as .csv file
+
+csv = np.savetxt(r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\processed_data\only_broccoli.csv", only_broccoli)
+

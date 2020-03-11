@@ -1,4 +1,4 @@
-#%% import packages 
+?#%% import packages 
 import os
 import pptk
 import numpy as np
@@ -14,8 +14,9 @@ import math
 #%%
 
 #specifiy the folder/file for the .las files. 
-path = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\AZ74_10m-0-1 - Cloud.las"
+#path = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\AZ74_10m-0-1 - Cloud.las"
 #path = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\35m\Rijweg_stalling1-9-5.las"
+path = r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\ultra_high_res-1-1 - Cloud.las"
 
 if path.endswith('las'):
     data_las = File(path, mode = 'r')
@@ -108,10 +109,8 @@ xyz_nn = np.vstack([xn,yn,zn]).T
 #L = (Lab[:,2] - Lab[:,2].min()) / (Lab[:,2].max() - Lab[:,2].min())
 #Lab = np.vstack((b,a,L)).T
 
-v = pptk.viewer(xyz)
+v = pptk.viewer(xyz,rgb)
 v.set(point_size = 0.01)
-v.color_map('spring',scale=[0,5])
-v.color_map([[0, 0, 0], [1, 1, 1]])
 
 #%% 
 # Nearest neighbors with normalized data. The confusion matrix return better results but the visualization was not so good
@@ -200,7 +199,7 @@ print (time.clock() - start_time, "seconds")
 # v.set(point_size=0.02)
 # 
 # v = pptk.viewer(xyz,plan_n)
-# v.set(point_size=0.02)
+# v.set(point_size=0.01)
 # 
 # v = pptk.viewer(xyz,scat_n)
 # v.set(point_size=0.02)
@@ -215,11 +214,15 @@ print (time.clock() - start_time, "seconds")
 # v.set(point_size=0.02)
 # 
 # v = pptk.viewer(xyz,dif_elev_n)
-# v.set(point_size=0.02)
+# v.set(point_size=0.01)
 # 
 # v = pptk.viewer(xyz,omn_n)
+# v.set(point_size=0.01)
+# 
+# v = pptk.viewer(xyz,ei_n)
 # v.set(point_size=0.02)
 # =============================================================================
+
 
 # features chooce
 if 'Lab' in locals():
