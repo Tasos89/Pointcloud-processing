@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from skimage import feature, color
 
-#%% reade the 2D images
+#%% reade the 2D images preferably in grey scale
 
 input_path = r'C:\Users\laptop\Google Drive\pictures for the internship report\2D.png'
 #input_path = r'C:\Users\laptop\Google Drive\pictures for the internship report\2D_dense.png'

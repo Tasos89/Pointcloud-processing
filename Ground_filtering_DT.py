@@ -9,7 +9,7 @@ import json, sys
 
 #%% Read the data / initialize the parameters
 
-input_las =  r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\Broccoli\35m\Rijweg_stalling1-8-6.las"
+input_las =  "your_path.las"
 inputfile = File(input_las,mode="r")
 x = inputfile.x
 y = inputfile.y
@@ -17,9 +17,10 @@ z = inputfile.z
 xyz = np.vstack((x,y,z)).T
 
 #%%initialize the parameters 
-gf_distance = 0.008
-gf_angle = 10
-gf_cellsize = 1    
+
+gf_distance = 0.008 # vertical distance in [m]
+gf_angle = 10 # the maximum angle of the edges in [degrees]
+gf_cellsize = 1 # the size of the grid edge in [m]    
 
 #%% Extract the lower point of every cell
 
@@ -133,11 +134,17 @@ vertices = np.delete(vertices,[0,1,2,3],0)
 #adjust the indices of the triangles for the deleted vertices:
 triangles = np.asarray(dt.all_triangles())-10
 
-v = pptk.viewer(remaining)
-#v = pptk.viewer(vertices)
+DSM = np.array(remaining)
+DTM = np.array(vertices)
+
+#%% visualization of dtm-dsm
+
+v = pptk.viewer(DSM)
+v.set(point_size=0.01)
+v = pptk.viewer(DTM)
 v.set(point_size=0.01)
 
-dtm = np.savetxt(r"C:\Users\laptop\Google Drive\pictures for the internship report\presentation\potree\dtm.csv",vertices)
-dsm = np.savetxt(r"C:\Users\laptop\Google Drive\pictures for the internship report\presentation\potree\dsm.csv",remaining)
-
-DTM = dt.write_obj(r"C:\Users\laptop\Google Drive\pictures for the internship report\presentation\potree/DTM.obj")
+#%% write the data as .csv and .obj
+dtm = np.savetxt(your_path_and_name.csv,DTM)
+dsm = np.savetxt(your_path_and_name.csv,DSM)
+dt.write_obj(your_path_and_name.obj) #for view on CloudCompare 

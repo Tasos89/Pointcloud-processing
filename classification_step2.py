@@ -9,10 +9,6 @@ import pptk
 from laspy.file import File
 from sklearn.neighbors import NearestNeighbors
 from sklearn.ensemble import RandomForestClassifier
-from pyntcloud import PyntCloud
-import startin
-from sklearn.cluster import DBSCAN
-import sklearn
 
 #%% broccoli label=1
 
@@ -500,5 +496,5 @@ v.set(point_size=0.01)
 
 #%% save the classified broccoly points as .csv file
 
-csv = np.savetxt(r"C:\Users\laptop\Google Drive\Shared folder Tasos-VanBoven\Sample_data\processed_data\only_broccoli.csv", only_broccoli)
+csv = np.savetxt(your_path_and_name.csv, only_broccoli)
 

@@ -6,7 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import cv2
-#from scipy.interpolate import griddata
 
 #%% read data
 #input_path = r'C:\Users\laptop\Google Drive\scripts\Pointcloud-processing\out_file.csv'
@@ -35,7 +34,7 @@ plt.imshow(im)
 matplotlib.image.imsave(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D_dense.png', im)
 
 
-#%% read it as a grey scale image
+#%% read it and write it as a grey scale image
 
 #img = cv2.imread(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D2.png')
 img = cv2.imread(r'C:\Users\laptop\Google Drive\pictures for the internship report\2D_dense.png')
