@@ -1,4 +1,4 @@
-?#%% import packages 
+#%% import packages 
 import os
 import pptk
 import numpy as np
@@ -109,8 +109,6 @@ xyz_nn = np.vstack([xn,yn,zn]).T
 #L = (Lab[:,2] - Lab[:,2].min()) / (Lab[:,2].max() - Lab[:,2].min())
 #Lab = np.vstack((b,a,L)).T
 
-v = pptk.viewer(xyz,rgb)
-v.set(point_size = 0.01)
 
 #%% 
 # Nearest neighbors with normalized data. The confusion matrix return better results but the visualization was not so good

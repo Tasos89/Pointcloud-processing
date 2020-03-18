@@ -484,7 +484,7 @@ v = pptk.viewer(xyz,yyyy_pred)
 v.set(point_size=0.001)
 print (time.clock() - start_time, "seconds")
 
-# keep only the broccoli points by keeping the red points
+#%% keep only the broccoli points by keeping the red points
 red_indices = np.where(yyyy_pred[:,0]==1)
 red_indices = np.reshape(red_indices,-1,1)
 only_broccoli = xyz[red_indices,:]

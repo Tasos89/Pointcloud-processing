@@ -22,10 +22,10 @@ fig = plt.figure(figsize = (15,15))
 ax = fig.add_subplot(1,1,1)
 
 blobs_dog = [(x[0],x[1],x[2]) for x in feature.blob_dog(-bw, 
-                                                        min_sigma=8, #4
-                                                        max_sigma=15, #8
-                                                        threshold=0.004, #0.006
-                                                        overlap=0.002)] #0.002
+                                                        min_sigma=8, 
+                                                        max_sigma=15, 
+                                                        threshold=0.004, 
+                                                        overlap=0.002)] 
 
 #remove duplicates
 blobs_dog = set(blobs_dog)
@@ -51,10 +51,10 @@ fig = plt.figure(figsize = (15,15))
 ax = fig.add_subplot(1,1,1)
 
 blobs_dog = [(x[0],x[1],x[2]) for x in feature.blob_dog(-bw, 
-                                                        min_sigma=90, #4
-                                                        max_sigma=100, #8
-                                                        threshold=0.4, #0.006
-                                                        overlap=0.002)] #0.002
+                                                        min_sigma=90, 
+                                                        max_sigma=100, 
+                                                        threshold=0.4, 
+                                                        overlap=0.002)] 
 
 #remove duplicates
 blobs_dog = set(blobs_dog)
